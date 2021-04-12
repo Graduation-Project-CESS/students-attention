@@ -168,37 +168,36 @@ for folder in folders:
 #path = glob.glob("./images/*.jpg")
 
 
+
 def detect_face_points(image,face_rect):
     #detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor("attention_model/face_points_model.dat")
     #face_rect = detector(image, 1)
     print(face_rect)
-    print(face_rect.tl_corner())
-    print(type(face_rect.br_corner()))
-    print(face_rect.top())
-    top_left = (face_rect.left() , face_rect.top() )
-    bottom_right = (face_rect.right(), face_rect.bottom())
-    dlib_points = predictor(image, face_rect)
-    face_points = []
-    for i in range(68):
-        x, y = dlib_points.part(i).x, dlib_points.part(i).y
-        face_points.append(np.array([x, y]))
-    cv2.rectangle(image, top_left, bottom_right, (0,255,0), 2)
-    cv2.imwrite('./attention _images/face_image_1.jpg',image)
-    plt.figure(figsize=(10, 10))
-    plt.imshow(image)
-    return face_points
-        
-def compute_features(face_points):
-    assert (len(face_points) == 68), "len(face_points) must be 68"
-    
-    face_points = np.array(face_points)
-    features = []
-    for i in range(68):
-        for j in range(i+1, 68):
-            features.append(np.linalg.norm(face_points[i]-face_points[j]))
-            
-    return np.array(features).reshape(1, -1)
+    total_face_points=[]
+    for rect in face_rect:
+        face_points=[]
+        top_left = (rect.left() , rect.top() )
+        bottom_right = (rect.right(), rect.bottom())
+        dlib_points = predictor(image, rect)
+        for i in range(68):
+            x, y = dlib_points.part(i).x, dlib_points.part(i).y
+            face_points.append(np.array([x, y]))
+        total_face_points.append(face_points)
+    return total_face_points
+
+
+def compute_features(total_face_points):
+    total_features=[]
+    for face_points in total_face_points:
+        face_points = np.array(face_points)
+        features = []
+        for i in range(68):
+            for j in range(i+1, 68):
+                features.append(np.linalg.norm(face_points[i]-face_points[j]))
+        features=np.array(features).reshape(1, -1)
+        total_features.append(features)    
+    return total_features
 
 imagesCount=0
 images = []
@@ -224,29 +223,36 @@ print("\ndetected", detectedFacesCount, "faces")
 #accuracy= (detectedFacesCount / facesCount) * 100
 #print("Program terminxated successfully with accuracy: {} %".format(accuracy))
 print(detectedFacesLoc)
-detectedFacesLoc = np.squeeze(np.array(detectedFacesLoc)[: , 0:-2])
-detectedFacesLoc = dlib.rectangle(detectedFacesLoc[0], detectedFacesLoc[1], 
-                                  detectedFacesLoc[2], detectedFacesLoc[3])
-
-print(type(detectedFacesLoc))
 rectangles_detected=dlib.rectangles()
-print(type(rectangles_detected))
-print(rectangles_detected)
-rectangles_detected = rectangles_detected.append(x=detectedFacesLoc)
-print(rectangles_detected)
-face_points = detect_face_points(im, detectedFacesLoc)
+print("----------------------------")
+for detected_faces in (detectedFacesLoc):
+    detected_faces= np.array(detected_faces)[0:-2]
 
-for x, y in face_points:
-    cv2.circle(im, (x, y), 1, (0, 255, 0), -1)
-    
-features = compute_features(face_points)
-std = pkl.load(open('attention_model/std_scaler.pkl', 'rb'))
-features = std.transform(features)
+    detected_faces= dlib.rectangle(detected_faces[0], detected_faces[1], 
+                                  detected_faces[2], detected_faces[3])
+    rectangles_detected.append(detected_faces)
+print("-----------------------")
+print("Start Face pose model")
+#i stopped here 4/10/2021, the last thing is i created rectangle_detected and successfully appended all the faces found in it.
 
-model = load_model('attention_model/face_pose_model.h5')
-y_pred = model.predict(features)
+total_face_points = detect_face_points(im, rectangles_detected)
+print("finished detect_face_points")
 
-roll_pred, pitch_pred, yaw_pred = y_pred[0]
-print(' Roll: {:.2f}°'.format(roll_pred))
-print('Pitch: {:.2f}°'.format(pitch_pred))
-print('  Yaw: {:.2f}°'.format(yaw_pred))
+total_features = compute_features(total_face_points)
+print("finished compute_features")
+print(total_features)
+std = pkl.load(open('./attention_model/std_scaler.pkl', 'rb'))
+model = load_model('./attention_model/face_pose_model.h5')
+total_angles=[]
+for features in total_features:
+    features = std.transform(features)
+    y_pred = model.predict(features)
+    roll_pred, pitch_pred, yaw_pred = y_pred[0]
+    print("-------------------")
+    print('mayel: {:.2f}°'.format(roll_pred))
+    print('fo2 we ta7t: {:.2f}°'.format(pitch_pred))
+    print('ymeen we shmal: {:.2f}°'.format(yaw_pred))
+    angles=[roll_pred, pitch_pred, yaw_pred]
+    total_angles.append(angles)
+print("total angles:")
+print(total_angles)
