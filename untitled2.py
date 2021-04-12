@@ -75,6 +75,7 @@ plt.legend()
 
 
 
+
 def detect_face_points(image):
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor("attention_model/face_points_model.dat")
@@ -88,6 +89,7 @@ def detect_face_points(image):
     for i in range(68):
         x, y = dlib_points.part(i).x, dlib_points.part(i).y
         face_points.append(np.array([x, y]))
+    cv2.imwrite('./face_detection_images/face_image_1.png',image)
     return face_points
         
 def compute_features(face_points):

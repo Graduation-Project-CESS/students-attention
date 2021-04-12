@@ -29,3 +29,4 @@ After successfully installing dlib, install face recognition using the following
 
 If you faced any issues while installing dlib or face_recognition please follow this link https://github.com/ageitgey/face_recognition/issues/175
 
+download the dataset used in training attention model from https://drive.google.com/drive/folders/1lxwO-A-VBZCVuKKP1FgE_h0ZgfxUvlR4 
