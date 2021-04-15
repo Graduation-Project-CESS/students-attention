@@ -7,7 +7,7 @@ import os
 import numpy as np
 import _pickle as pkl
 from keras.models import load_model
-
+ 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 
@@ -118,7 +118,7 @@ def compute_features(total_face_points):
 
 imagesCount=0
 images = []
-im = cv2.imread('testing_dataset/IMG_8639.png', cv2.IMREAD_COLOR)
+im = cv2.imread('testing_dataset/IMG_8607.png', cv2.IMREAD_COLOR)
 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 h,w,c = im.shape
 if h > 1280 and w > 720:
@@ -143,8 +143,13 @@ for detected_faces in (detectedFacesLoc):
     detected_faces= dlib.rectangle(detected_faces[0], detected_faces[1], 
                                   detected_faces[2], detected_faces[3])
     rectangles_detected.append(detected_faces)
+
 print("-----------------------")
 print("Start Face pose model")
+
+labels=[0,1,2,3,4]
+uniques, ids = np.unique(labels, return_inverse=True)
+
 
 total_face_points = detect_face_points(im, rectangles_detected)
 print("finished detect_face_points")
@@ -157,5 +162,7 @@ total_angles=[]
 for features in total_features:
     features = std.transform(features)
     y_pred = model.predict(features)
-    print('y:', y_pred)
-    total_angles.append(y_pred)
+    predicted_label=uniques[y_pred.argmax(1)]
+    total_angles.append(predicted_label)
+total_angles = np.array(np.squeeze(total_angles))
+print(total_angles)

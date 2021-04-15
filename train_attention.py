@@ -9,27 +9,38 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from keras import  backend as K
+from keras.utils import np_utils
 
 
 x, y = pkl.load(open('training_attention/samples.pkl', 'rb'))
 y_new = []
 for i in range(len(y)):
     if (y[i][2] < -50):
-        y[i] = -2
+        y[i] = 0
     elif (y[i][2] > -50 and y[i][2] < -10):
-        y[i] = -1    
+        y[i] = 1    
     elif (y[i][2] > -10 and y[i][2] < 10):
-        y[i] = 0     
+        y[i] = 2     
     elif (y[i][2] > 10 and y[i][2] < 50):
-        y[i] = 1     
+        y[i] = 3     
     else:
-        y[i] = 2 
+        y[i] = 4 
     y_new.append(y[i][0])
 
+
+uniques, ids = np.unique(y_new, return_inverse=True)
+#print(ids[0:5])
+#print(uniques[0:5])
 
 x_train, x_test, y_train, y_test = train_test_split(x, y_new, test_size=0.3, random_state=42)
 x_val, x_test, y_val, y_test = train_test_split(x_test, y_test, test_size=0.5, random_state=42)
 
+n_classes = 5
+y_test = np_utils.to_categorical(y_test, n_classes)
+y_train = np_utils.to_categorical(y_train, n_classes)
+y_val = np_utils.to_categorical(y_val, n_classes)  
+
+#print(y_train)
 
 std = StandardScaler()
 std.fit(x_train)
@@ -38,24 +49,25 @@ x_train = std.transform(x_train)
 x_val = std.transform(x_val)
 x_test = std.transform(x_test)
 
-BATCH_SIZE = 64
-EPOCHS = 100
+BATCH_SIZE = 32
+EPOCHS = 1000
 Learning_rate=0.001
 
 
 model = Sequential()
-model.add(Dense(units=20, activation='relu', kernel_regularizer='l2', input_dim=x.shape[1]))
-model.add(Dense(units=10, activation='relu', kernel_regularizer='l2'))
+model.add(Dense(units=30, activation='relu', kernel_regularizer='l2', input_dim=x.shape[1]))
 model.add(Dense(units=30, activation='relu', kernel_regularizer='l2'))
-model.add(Dense(units=1, activation='linear'))
+model.add(Dense(units=10, activation='relu', kernel_regularizer='l2'))
+model.add(Dense(units=5, activation='relu', kernel_regularizer='l2'))
+model.add(Dense(units=5, activation='softmax'))
 
 print(model.summary())
 
-es = EarlyStopping(monitor='accuracy', mode='max', verbose=1,patience=20)
+es = EarlyStopping(monitor='accuracy', mode='max', verbose=1,patience=1000)
 #set model checkpoint to save the model whenever getting accuracy higher than current max one
 mc = ModelCheckpoint('attention_model/face_pose_model.h5', monitor='accuracy', mode='max',verbose=1, save_best_only=True)
 
-model.compile(optimizer='adam', loss='mean_squared_error',metrics=['accuracy'])
+model.compile(optimizer='adam', loss='categorical_crossentropy',metrics=['accuracy'])
 K.set_value(model.optimizer.learning_rate, Learning_rate)
 hist = model.fit(x=x_train, y=y_train, validation_data=(x_val, y_val), batch_size=BATCH_SIZE, epochs=EPOCHS, callbacks=[es,mc])
 
@@ -102,6 +114,7 @@ def compute_features(face_points):
     return np.array(features).reshape(1, -1)
 
 im = cv2.imread('testing_dataset/IMG_8589_1.png', cv2.IMREAD_COLOR)
+cv2.imshow("test_sample", im)
 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
 face_points = detect_face_points(im)
@@ -115,7 +128,9 @@ features = std.transform(features)
 
 model = load_model('attention_model/face_pose_model.h5')
 y_pred = model.predict(features)
+predicted_label=uniques[y_pred.argmax(1)]
 
-print('  Y: ',y_pred)
+print(y_pred)
+print('  Y: ',predicted_label)
 
 
