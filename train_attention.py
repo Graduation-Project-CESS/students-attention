@@ -11,6 +11,8 @@ from sklearn.preprocessing import StandardScaler
 from keras import  backend as K
 from keras.utils import np_utils
 
+ 
+
 
 x, y = pkl.load(open('training_attention/samples.pkl', 'rb'))
 y_new = []
@@ -27,20 +29,30 @@ for i in range(len(y)):
         y[i] = 4 
     y_new.append(y[i][0])
 
+ 
+
 
 uniques, ids = np.unique(y_new, return_inverse=True)
 #print(ids[0:5])
 #print(uniques[0:5])
 
+ 
+
 x_train, x_test, y_train, y_test = train_test_split(x, y_new, test_size=0.3, random_state=42)
 x_val, x_test, y_val, y_test = train_test_split(x_test, y_test, test_size=0.5, random_state=42)
+
+ 
 
 n_classes = 5
 y_test = np_utils.to_categorical(y_test, n_classes)
 y_train = np_utils.to_categorical(y_train, n_classes)
 y_val = np_utils.to_categorical(y_val, n_classes)  
 
+ 
+
 #print(y_train)
+
+ 
 
 std = StandardScaler()
 std.fit(x_train)
@@ -49,9 +61,13 @@ x_train = std.transform(x_train)
 x_val = std.transform(x_val)
 x_test = std.transform(x_test)
 
+ 
+
 BATCH_SIZE = 32
 EPOCHS = 1000
 Learning_rate=0.001
+
+ 
 
 
 model = Sequential()
@@ -61,23 +77,35 @@ model.add(Dense(units=10, activation='relu', kernel_regularizer='l2'))
 model.add(Dense(units=5, activation='relu', kernel_regularizer='l2'))
 model.add(Dense(units=5, activation='softmax'))
 
+ 
+
 print(model.summary())
+
+ 
 
 es = EarlyStopping(monitor='accuracy', mode='max', verbose=1,patience=1000)
 #set model checkpoint to save the model whenever getting accuracy higher than current max one
 mc = ModelCheckpoint('attention_model/face_pose_model.h5', monitor='accuracy', mode='max',verbose=1, save_best_only=True)
 
+ 
+
 model.compile(optimizer='adam', loss='categorical_crossentropy',metrics=['accuracy'])
 K.set_value(model.optimizer.learning_rate, Learning_rate)
 hist = model.fit(x=x_train, y=y_train, validation_data=(x_val, y_val), batch_size=BATCH_SIZE, epochs=EPOCHS, callbacks=[es,mc])
+
+ 
 
 print('Train loss:', model.evaluate(x_train, y_train, verbose=0))
 print('  Val loss:', model.evaluate(x_val, y_val, verbose=0))
 print(' Test loss:', model.evaluate(x_test, y_test, verbose=0))
 
+ 
+
 history = hist.history
 loss_train = history['loss']
 loss_val = history['val_loss']
+
+ 
 
 
 plt.figure()
@@ -85,7 +113,9 @@ plt.plot(loss_train, label='train')
 plt.plot(loss_val, label='val_loss', color='red')
 plt.legend()
 
+ 
 
+ 
 
 def detect_face_points(image):
     detector = dlib.get_frontal_face_detector()
@@ -113,24 +143,25 @@ def compute_features(face_points):
             
     return np.array(features).reshape(1, -1)
 
+ 
+
 im = cv2.imread('testing_dataset/IMG_8589_1.png', cv2.IMREAD_COLOR)
-cv2.imshow("test_sample", im)
 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
-face_points = detect_face_points(im)
+ 
 
-for x, y in face_points:
-    cv2.circle(im, (x, y), 1, (0, 255, 0), -1)
-    
+face_points = detect_face_points(im)    
 features = compute_features(face_points)
 std = pkl.load(open('attention_model/std_scaler.pkl', 'rb'))
 features = std.transform(features)
+
+ 
 
 model = load_model('attention_model/face_pose_model.h5')
 y_pred = model.predict(features)
 predicted_label=uniques[y_pred.argmax(1)]
 
+ 
+
 print(y_pred)
 print('  Y: ',predicted_label)
-
-

@@ -7,6 +7,9 @@ import os
 import numpy as np
 import _pickle as pkl
 from keras.models import load_model
+from fer import FER
+import matplotlib.pyplot as plt
+
  
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
@@ -133,22 +136,19 @@ print("\nloaded images successfully")
 # call "FindFaces()" function and print the number of faces detected using different classifiers
 detectedFacesCount, detectedFacesLoc = FindFaces(imagesCount) 
 print("\ndetected", detectedFacesCount, "faces")
-
-
 print(detectedFacesLoc)
+
+
 rectangles_detected=dlib.rectangles()
 for detected_faces in (detectedFacesLoc):
-    detected_faces= np.array(detected_faces)[0:-2]
+    detected_faces = np.array(detected_faces)[0:-2]
 
-    detected_faces= dlib.rectangle(detected_faces[0], detected_faces[1], 
+    detected_faces = dlib.rectangle(detected_faces[0], detected_faces[1], 
                                   detected_faces[2], detected_faces[3])
     rectangles_detected.append(detected_faces)
 
 print("-----------------------")
 print("Start Face pose model")
-
-labels=[0,1,2,3,4]
-uniques, ids = np.unique(labels, return_inverse=True)
 
 
 total_face_points = detect_face_points(im, rectangles_detected)
@@ -158,11 +158,23 @@ total_features = compute_features(total_face_points)
 print("finished compute_features")
 std = pkl.load(open('./attention_model/std_scaler.pkl', 'rb'))
 model = load_model('./attention_model/face_pose_model.h5')
-total_angles=[]
+total_poses=[]
+
+labels=[0,1,2,3,4]
+uniques, ids = np.unique(labels, return_inverse=True)
+
 for features in total_features:
     features = std.transform(features)
     y_pred = model.predict(features)
     predicted_label=uniques[y_pred.argmax(1)]
-    total_angles.append(predicted_label)
-total_angles = np.array(np.squeeze(total_angles))
-print(total_angles)
+    total_poses.append(predicted_label)
+    
+total_poses = np.array(np.squeeze(total_poses))
+print(total_poses)
+
+im = plt.imread("testing_dataset/IMG_8607.jpg")
+if h > 1280 and w > 720:
+    im=cv2.resize(im, dsize=(1280,720), interpolation=cv2.INTER_CUBIC)
+detector = FER(mtcnn=True)
+print(detector.detect_emotions(im))
+plt.imshow(im)
