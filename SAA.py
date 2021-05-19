@@ -121,7 +121,7 @@ def compute_features(total_face_points):
 
 imagesCount=0
 images = []
-im = cv2.imread('testing_dataset/IMG_8607.png', cv2.IMREAD_COLOR)
+im = cv2.imread('testing_dataset/IMG_8604.png', cv2.IMREAD_COLOR)
 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 h,w,c = im.shape
 if h > 1280 and w > 720:
@@ -139,19 +139,19 @@ print("\ndetected", detectedFacesCount, "faces")
 print(detectedFacesLoc)
 
 
-rectangles_detected=dlib.rectangles()
+face_rect=dlib.rectangles()
 for detected_faces in (detectedFacesLoc):
     detected_faces = np.array(detected_faces)[0:-2]
 
     detected_faces = dlib.rectangle(detected_faces[0], detected_faces[1], 
                                   detected_faces[2], detected_faces[3])
-    rectangles_detected.append(detected_faces)
+    face_rect.append(detected_faces)
 
 print("-----------------------")
 print("Start Face pose model")
 
 
-total_face_points = detect_face_points(im, rectangles_detected)
+total_face_points = detect_face_points(im, face_rect)
 print("finished detect_face_points")
 
 total_features = compute_features(total_face_points)
@@ -172,9 +172,63 @@ for features in total_features:
 total_poses = np.array(np.squeeze(total_poses))
 print(total_poses)
 
-im = plt.imread("testing_dataset/IMG_8607.jpg")
+#5 categories of attention 
+attention = [0,0,0,0,0]
+
+'''
+im = cv2.imread("testing_dataset/IMG_8604.png")
 if h > 1280 and w > 720:
     im=cv2.resize(im, dsize=(1280,720), interpolation=cv2.INTER_CUBIC)
-detector = FER(mtcnn=True)
-print(detector.detect_emotions(im))
+'''
+    
+#detect faces using FER() , detect emotions 
+#then compare detected faces from FER() with detected faces from our classifier
+detector = FER()    
+students = detector.detect_emotions(im)
+
+for s in students:
+    flag = False
+    for f, p in zip(detectedFacesLoc,total_poses):
+        
+        if(f[0]-10 < s["box"][0] < f[0]+10):
+            flag = True
+            s["pose"] = p
+            s["box"] = f
+            
+    if(not(flag)):
+        students.remove(s)
+    s["emotions"] = dict(sorted(s["emotions"].items(), key=lambda item: item[1]))
+    s["emotions"] = list(s["emotions"].items())
+    if(s["emotions"][-1][0] == "happy" and s["pose"] > 1):
+        attention[4] +=1  
+        s["emotions"] = 1
+    elif(s["emotions"][-1][0] == "neutral" and s["pose"] > 1):
+        attention[3] +=1  
+        s["emotions"] = 0
+    elif(s["pose"] > 1):
+        attention[2] +=1  
+        s["emotions"] = -1
+    elif(s["emotions"][-1][0] == "happy" and s["pose"] == 1):
+        attention[1] +=1 
+        s["emotions"] = 1
+    elif(s["emotions"][-1][0] == "neutral" and s["pose"] == 1):
+        attention[1] +=1 
+        s["emotions"] = 0
+    elif(s["emotions"][-1][0] == "neutral" and s["pose"] < 1):
+        attention[0] +=1 
+        s["emotions"] = 0   
+    elif(s["emotions"][-1][0] == "happy" and s["pose"] < 1):
+        attention[0] +=1 
+        s["emotions"] = 1   
+    else:
+        attention[0] +=1 
+        s["emotions"] = -1   
+
+    
+    print(s["emotions"])
+    #s["attention"] = []
+    #s["attention"].append()
+
+print(attention)
+print(students)
 plt.imshow(im)
