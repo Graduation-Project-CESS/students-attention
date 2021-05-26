@@ -9,58 +9,65 @@ import _pickle as pkl
 from keras.models import load_model
 from fer import FER
 import matplotlib.pyplot as plt
-
+import time
  
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 
-class student:
+class Student:
 
+    
     def __init__(self, coordinates):
         self.coordinates = coordinates
         self.name = ''
-        self.attendance = [0,0]
-        self.attention = [0,0,0,0,0]
+        self.poses = []
+        self.emotions = []
+    
+    def set_coordinates(self, coordinates):
+        self.coordinates = coordinates
     
     def set_name(self,name):
         self.name = name
         
-    def increment_attedance(self, attendance, mode):
-       
-        self.attendance[mode] +=1
+    def add_pose(self, pose):
+        self.poses.append(pose)
         
-    def increment_attention(self, attention, mode):
-        self.attention[mode] += 1
+    def add_emotion(self, emotion):
+        self.emotions.append(emotion)
+    
+    def get_coordinates(self):
+        return self.coordinates
     
     def get_name(self):
         return self.name
     
-    def get_attendance(self):
-        return self.attendance
+    def get_poses(self):
+        return self.poses
     
-    def get_attention(self):
-        return self.attention
- 
+    def get_emotions(self):
+        return self.emotions
+   
+    def print_student(self):
+        print("Coordinates: {}".format(self.coordinates))
+        print("Name: {}".format(self.name))
+        print("Poses: {}".format(self.poses))
+        print("Emotions: {}".format(self.emotions))
+        
 ####################### System Functions #####################################       
 def load_image(path):
-    imagesCount=0
-    im = cv2.imread(path, cv2.IMREAD_COLOR)
-    im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
-    h,w,c = im.shape
+    img = cv2.imread(path, cv2.IMREAD_COLOR)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    h,w,c = img.shape
     if h > 1280 and w > 720:
-        im=cv2.resize(im, dsize=(1280,720), interpolation=cv2.INTER_CUBIC)
-    #images.append(im)
-    cv2.imwrite('./temp/image{}.png'.format(imagesCount),im)
-    #imagesCount+=1
-    return im
+        img=cv2.resize(img, dsize=(1280,720), interpolation=cv2.INTER_CUBIC)
+    cv2.imwrite('./temp/image{}.png'.format(number_of_images),img)
+    return img
 
 def FindFaces(img):
-    #imagesCount = 1
-    detectedFacesCount = 0
     detectedFacesLoc = []  
-    loadedImages = 0
+    
+    ###################### CNN Classifier ######################
     cnn_face = dlib.cnn_face_detection_model_v1('./detection_model/mmod_human_face_detector.dat')
-    #img = face_recognition.load_image_file('./temp/image{}.png'.format(loadedImages))
     face_locations =cnn_face(img,0)
     if (len(face_locations) == 0):
         face_locations =cnn_face(img,1)
@@ -73,6 +80,8 @@ def FindFaces(img):
             c = 1
             count = 1
             detectedFacesLoc.append([x1,y1,x2,y2,c,count])
+    
+    ###################### Face Recoginition Classifier ######################
     try:
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         grayscale_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -94,7 +103,7 @@ def FindFaces(img):
                 c = 2
                 detectedFacesLoc.append([x1,y1,x2,y2,c,1])
          
-                     
+    ###################### CV Lib Classifier ######################                 
     face_locations, confidences = cv.detect_face(img)
     if (len(face_locations) > 0):  
         for face in face_locations:
@@ -109,7 +118,7 @@ def FindFaces(img):
                 c = 3
                 detectedFacesLoc.append([x1,y1,x2,y2,c,1])
                     
-            
+    ################## Draw Rectangles ############################        
     for f in detectedFacesLoc:
         if (f[5] > 1):              
             if (f[4] == 1) :
@@ -121,9 +130,8 @@ def FindFaces(img):
         else:
             detectedFacesLoc.remove(f)
             
-    cv2.imwrite('./detection_output/face_image_{}.jpg'.format(loadedImages),img)
-    detectedFacesCount += len(detectedFacesLoc)
-    return detectedFacesCount,detectedFacesLoc
+    cv2.imwrite('./detection_output/face_image_{}.jpg'.format(number_of_images),img)
+    return detectedFacesLoc
 
 def to_rectangles(detectedFacesLoc):
     face_rect=dlib.rectangles()
@@ -138,11 +146,11 @@ The get_pose() function uses the two functions {detect_face_points, compute_feat
 to get the poses of each face
 '''
 
-def get_pose(im, face_rect):
+def get_pose(img, face_rect):
     total_poses=[]
-    total_face_points = detect_face_points(im, face_rect)
+    total_face_points = detect_face_points(img, face_rect)
     total_features = compute_features(total_face_points)
-    labels=[0,1,2,3,4]
+    labels = [0,1,2,3,4]
     uniques, ids = np.unique(labels, return_inverse=True)
     std = pkl.load(open('./attention_model/std_scaler.pkl', 'rb'))
     model = load_model('./attention_model/face_pose_model.h5')
@@ -156,9 +164,7 @@ def get_pose(im, face_rect):
 
 
 def detect_face_points(image,face_rect):
-    #detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor("attention_model/face_points_model.dat")
-    #face_rect = detector(image, 1)
     total_face_points=[]
     for rect in face_rect:
         face_points=[]
@@ -183,30 +189,29 @@ def compute_features(total_face_points):
     return total_features
 
 
-def compare_and_set_pose(detectedFacesLoc, students, total_poses):
-    for student in students:
-        flag = False
+def compare_and_set_pose(detectedFacesLoc, students_dict, total_poses):
+    temp_dict=[]
+    
+    for student in students_dict:
         for face, pose in zip(detectedFacesLoc,total_poses):
             
-            if(face[0]-10 < student["box"][0] < face[0]+10):
-                flag = True
+            if(face[0]-20 <= student["box"][0] <= face[0]+20):
+                student['box'] = face[:-2]
                 student["pose"] = pose
-                student["box"] = face
-                
-        if(not(flag)):
-            students.remove(student)
-    return students
+                temp_dict.append(student)
 
-def set_attention(students):
-    attention = [0,0,0,0,0]
+    return temp_dict
 
-    for student in students:
+def set_emotion(students_dict):
+    #attention = [0,0,0,0,0]
+
+    for student in students_dict:
         student["emotions"] = dict(sorted(student["emotions"].items(), key=lambda item: item[1]))
     
         student["emotions"] = list(student["emotions"].items())
         
-        dominant_emotion = student["emotions"][-1][0]
-        student_pose = student["pose"]
+        student["emotions"] = student["emotions"][-1][0]
+        '''
         if(dominant_emotion == "happy" and student_pose > 1):
             attention[4] +=1  
             student["emotions"] = 1
@@ -231,222 +236,73 @@ def set_attention(students):
         else:
             attention[0] +=1 
             student["emotions"] = -1
-    return attention, students
+        '''
+    return students_dict
 
-def main():
-    path = 'testing_dataset/IMG_8604.png'
+def fill_students(students_dict, students_list):
+    if len(students_list)== 0:
+        for s in students_dict:
+            students_list.append(Student(s['box']))
+            
+    for student_object in  students_list:
+        student_top_left = student_object.get_coordinates()[0]
+        for student in students_dict:
+            if ( student['box'][0] - 20 < student_top_left < student['box'][0] + 20):    
+                student_object.add_pose(student['pose'])
+                student_object.add_emotion(student['emotions'])
+    
+
+
+def main(number_of_images):
+    start_time = time.time()
+    path_list = ['testing_dataset/IMG_8607.png','testing_dataset/IMG_8608.png']
     print("Starting the system.")
-    print('-' * 40)
-    im = load_image(path)
-    print("Loaded Image Successfully.")
+    for path in path_list:
     
-    print('-' * 40)
-    detectedFacesCount, detectedFacesLoc = FindFaces(im) 
-    print("Face Locations: ", detectedFacesLoc)
-    
-    print('-' * 40)
-    face_rect = to_rectangles(detectedFacesLoc)
-    print("Face Rectangles: ", face_rect)
-    
-    print('-' * 40)
-    total_poses = get_pose(im, face_rect)
-    print("Students' poses: ", total_poses)
-    
-    print('-' * 40)
-    detector = FER()    
-    students = detector.detect_emotions(im)
-    print("Students' Dictionary: \n", students)
-    
-    print('-' * 40)
-    students = compare_and_set_pose(detectedFacesLoc, students, total_poses)
-    print("Students Dictionary after removing the incorrect faces (if exists) and setting the pose of each student: \n", students)
-    
-    print('-' * 40)
-    attention, students = set_attention(students)
-    print("Attention List: ", attention)
-    print("Students dictionary after adding the dominant emotion for each student: \n",students)
-    
-    print('-' * 40)
-    print("System Terminated Successfully.")
-main()
-
-# !----------------------------old code--------------------------!    
-''' 
-def FindFaces(img):
-    imagesCount = 1
-    detectedFacesCount = 0
-    detectedFacesLoc = []  
-    cnn_face = dlib.cnn_face_detection_model_v1('./detection_model/mmod_human_face_detector.dat')
-    for loadedImages in tqdm(range (0, imagesCount)): 
-        #img = face_recognition.load_image_file('./temp/image{}.png'.format(loadedImages))
-        face_locations =cnn_face(img,0)
-        if (len(face_locations) == 0):
-            face_locations =cnn_face(img,1)
-        if (len(face_locations) > 0):  
-            for face in face_locations:
-                x1 = face.rect.left()
-                y1 = face.rect.top()
-                x2 = face.rect.right()
-                y2 = face.rect.bottom()
-                c = 1
-                count = 1
-                detectedFacesLoc.append([x1,y1,x2,y2,c,count])
-        try:
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-            grayscale_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        except:
-            print("Something went wrong")
-        finally:
-            face_locations = face_recognition.face_locations(grayscale_image)
+        print('-' * 40)
+        img = load_image(path)
+        print("Loaded Image Successfully.")
         
-        if (len(face_locations) > 0):  
-            for face in face_locations:
-                y1,x2,y2,x1 = face
-                found = 0
-                for dface in detectedFacesLoc:
-                    if (x1 < dface[0] + 30 and x1 > dface[0] - 30):
-                        found = 1
-                        dface[5] += 1
-                        break
-                if (found == 0):
-                    c = 2
-                    detectedFacesLoc.append([x1,y1,x2,y2,c,1])
-         
-                     
-        face_locations, confidences = cv.detect_face(img)
-        if (len(face_locations) > 0):  
-            for face in face_locations:
-                x1,y1,x2,y2 = face
-                found = 0
-                for dface in detectedFacesLoc:
-                    if (x1 < dface[0] + 30 and x1 > dface[0] - 30):
-                        found = 1
-                        dface[5] += 1
-                        break
-                if (found == 0):
-                    c = 3
-                    detectedFacesLoc.append([x1,y1,x2,y2,c,1])
-                    
-            
-        for f in detectedFacesLoc:
-            if (f[5] > 1):              
-                if (f[4] == 1) :
-                    cv2.rectangle(img, (f[0],f[1]), (f[2],f[3]), (255,0,0), 2)
-                elif (f[4] == 2) :
-                   cv2.rectangle(img, (f[0],f[1]), (f[2],f[3]), (0,255,0), 2)                
-                else:
-                   cv2.rectangle(img, (f[0],f[1]), (f[2],f[3]), (0,0,255), 2)
-            else:
-                detectedFacesLoc.remove(f)
-            
-        cv2.imwrite('./detection_output/face_image_{}.jpg'.format(loadedImages),img)
-        detectedFacesCount += len(detectedFacesLoc)
-    return detectedFacesCount,detectedFacesLoc
-   
-compare(detectedFacesLoc, students)
-#images = []
-path = 'testing_dataset/IMG_8604.png'
-im = load_image(path)
-
-# call "FindFaces()" function and print the number of faces detected using different classifiers
-detectedFacesCount, detectedFacesLoc = FindFaces(im) 
-print("\ndetected", detectedFacesCount, "faces")
-print(detectedFacesLoc)
-
-face_rect = to_rectangles(detectedFacesLoc)
-
-
-# print("-----------------------")
-# print("Start Face pose model")
-
-
-# total_face_points = detect_face_points(im, face_rect)
-# print("finished detect_face_points")
-
-# total_features = compute_features(total_face_points)
-# print("finished compute_features")
-# std = pkl.load(open('./attention_model/std_scaler.pkl', 'rb'))
-# model = load_model('./attention_model/face_pose_model.h5')
-# total_poses=[]
-
-# labels=[0,1,2,3,4]
-# uniques, ids = np.unique(labels, return_inverse=True)
-
-# for features in total_features:
-#     features = std.transform(features)
-#     y_pred = model.predict(features)
-#     predicted_label=uniques[y_pred.argmax(1)]
-#     total_poses.append(predicted_label)
-    
-# total_poses = np.array(np.squeeze(total_poses))
-
-total_poses = get_pose(im, face_rect)
-print(total_poses)
-
-#5 categories of attention 
-
-
-im = cv2.imread("testing_dataset/IMG_8604.png")
-if h > 1280 and w > 720:
-    im=cv2.resize(im, dsize=(1280,720), interpolation=cv2.INTER_CUBIC)
-
-    
-#detect faces using FER() , detect emotions 
-#then compare detected faces from FER() with detected faces from our classifier
-detector = FER()    
-students = detector.detect_emotions(im)
-
-compare(detectedFacesLoc, students)
-print('-'*40)
-
-attention, students = set_attention(students)
-
-# for s in students:
-#     # flag = False
-#     # for f, p in zip(detectedFacesLoc,total_poses):
+        print('-' * 40)
+        detectedFacesLoc = FindFaces(img) 
+        print("Face Locations: ", detectedFacesLoc)
         
-#     #     if(f[0]-10 < s["box"][0] < f[0]+10):
-#     #         flag = True
-#     #         s["pose"] = p
-#     #         s["box"] = f
-            
-#     # if(not(flag)):
-#     #     students.remove(s)
-
-#     s["emotions"] = dict(sorted(s["emotions"].items(), key=lambda item: item[1]))
-
-#     s["emotions"] = list(s["emotions"].items())
-#     if(s["emotions"][-1][0] == "happy" and s["pose"] > 1):
-#         attention[4] +=1  
-#         s["emotions"] = 1
-#     elif(s["emotions"][-1][0] == "neutral" and s["pose"] > 1):
-#         attention[3] +=1  
-#         s["emotions"] = 0
-#     elif(s["pose"] > 1):
-#         attention[2] +=1  
-#         s["emotions"] = -1
-#     elif(s["emotions"][-1][0] == "happy" and s["pose"] == 1):
-#         attention[1] +=1 
-#         s["emotions"] = 1
-#     elif(s["emotions"][-1][0] == "neutral" and s["pose"] == 1):
-#         attention[1] +=1 
-#         s["emotions"] = 0
-#     elif(s["emotions"][-1][0] == "neutral" and s["pose"] < 1):
-#         attention[0] +=1 
-#         s["emotions"] = 0   
-#     elif(s["emotions"][-1][0] == "happy" and s["pose"] < 1):
-#         attention[0] +=1 
-#         s["emotions"] = 1   
-#     else:
-#         attention[0] +=1 
-#         s["emotions"] = -1   
-
+        print('-' * 40)
+        face_rect = to_rectangles(detectedFacesLoc)
+        print("Face Rectangles: ", face_rect)
+        
+        print('-' * 40)
+        total_poses = get_pose(img, face_rect)
+        print("Students' poses: ", total_poses)
+        
+        print('-' * 40)
+        detector = FER(mtcnn=True)    
+        students_dict = detector.detect_emotions(img)
+        print("Students' Dictionary: \n", students_dict)
+        
+        print('-' * 40)
+        students_dict = compare_and_set_pose(detectedFacesLoc, students_dict, total_poses)
+        print("Students Dictionary after removing the incorrect faces (if exists) and setting the pose of each student: \n", students_dict)
+        
+        print('-' * 40)
+        students_dict = set_emotion(students_dict)
+        print("Students dictionary after adding the dominant emotion for each student: \n",students_dict)
+        
+        print('-' * 40)
+        fill_students(students_dict, students_list)
+        
+        number_of_images +=1
+        
+    execution_time = time.time() - start_time
+    for student_object in  students_list:    
+        student_object.print_student()
+        print('#'*40)
+    print('-' * 40)
+    print("System Terminated Successfully in {} sec ".format(execution_time))
     
-#     print(s["emotions"])
-#     #s["attention"] = []
-#     #s["attention"].append()
+############################# Start of code ###################################
+students_list =[]
+first_image = True
+number_of_images = 0
+main(number_of_images)
 
-print(attention)
-print(students)
-plt.imshow(im)
-'''
