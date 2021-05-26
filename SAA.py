@@ -10,9 +10,16 @@ from keras.models import load_model
 from fer import FER
 import matplotlib.pyplot as plt
 import time
- 
+from enum import Enum
+import copy
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
+class Pose_name(Enum):
+    right = 0
+    slightly_right = 1
+    center = 2
+    slightly_left = 3
+    left = 4
 
 class Student:
 
@@ -56,7 +63,7 @@ class Student:
 ####################### System Functions #####################################       
 def load_image(path):
     img = cv2.imread(path, cv2.IMREAD_COLOR)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     h,w,c = img.shape
     if h > 1280 and w > 720:
         img=cv2.resize(img, dsize=(1280,720), interpolation=cv2.INTER_CUBIC)
@@ -83,7 +90,7 @@ def FindFaces(img):
     
     ###################### Face Recoginition Classifier ######################
     try:
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        #img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         grayscale_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     except:
         print("Something went wrong")
@@ -121,17 +128,26 @@ def FindFaces(img):
     ################## Draw Rectangles ############################        
     for f in detectedFacesLoc:
         if (f[5] > 1):              
-            if (f[4] == 1) :
-                cv2.rectangle(img, (f[0],f[1]), (f[2],f[3]), (255,0,0), 2)
-            elif (f[4] == 2) :
-               cv2.rectangle(img, (f[0],f[1]), (f[2],f[3]), (0,255,0), 2)                
-            else:
-               cv2.rectangle(img, (f[0],f[1]), (f[2],f[3]), (0,0,255), 2)
+            cv2.rectangle(img, (f[0],f[1]), (f[2],f[3]), (0,0,255), 2)
         else:
             detectedFacesLoc.remove(f)
             
     cv2.imwrite('./detection_output/face_image_{}.jpg'.format(number_of_images),img)
     return detectedFacesLoc
+
+def write_output(img, student_dict, mode):
+    temp_img = copy.deepcopy(img)
+    for student in student_dict:
+        if mode =='pose':
+            text_to_display = Pose_name(student[mode]).name
+        else:
+            text_to_display = student[mode]
+        location = student['box']
+        cv2.rectangle(temp_img, (location[0],location[1]), (location[2],location[3]), (255,0,0), 2)
+        cv2.putText(temp_img, text_to_display, (location[0] + 10, location[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255,0,0), 2)
+            
+    cv2.imwrite('./{}_output/face_image_{}.jpg'.format(mode, number_of_images),temp_img)
+    return img
 
 def to_rectangles(detectedFacesLoc):
     face_rect=dlib.rectangles()
@@ -253,7 +269,9 @@ def fill_students(students_dict, students_list):
     
 
 
-def main(number_of_images):
+def main():
+    global number_of_images 
+    number_of_images = 0
     start_time = time.time()
     path_list = ['testing_dataset/IMG_8607.png','testing_dataset/IMG_8608.png']
     print("Starting the system.")
@@ -283,11 +301,14 @@ def main(number_of_images):
         print('-' * 40)
         students_dict = compare_and_set_pose(detectedFacesLoc, students_dict, total_poses)
         print("Students Dictionary after removing the incorrect faces (if exists) and setting the pose of each student: \n", students_dict)
-        
+        img = write_output(img, students_dict, 'pose')
+
         print('-' * 40)
         students_dict = set_emotion(students_dict)
         print("Students dictionary after adding the dominant emotion for each student: \n",students_dict)
         
+        img = write_output(img, students_dict, 'emotions')
+
         print('-' * 40)
         fill_students(students_dict, students_list)
         
@@ -302,7 +323,5 @@ def main(number_of_images):
     
 ############################# Start of code ###################################
 students_list =[]
-first_image = True
-number_of_images = 0
-main(number_of_images)
+main()
 
