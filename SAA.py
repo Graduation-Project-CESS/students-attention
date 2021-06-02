@@ -380,8 +380,15 @@ def fill_students(students_dict, students_list):
         flag = False
         for student_object in  students_list:
             student_name = student_object.get_name()
-            student_top_left = student_object.get_coordinates()[0]
-            if (student_name == s['name'] or (s['box'][0] - 20 < student_top_left < s['box'][0] + 20)):    
+            student_top_left_x = student_object.get_coordinates()[0]
+            student_top_left_y = student_object.get_coordinates()[1]
+            student_bottom_right_x = student_top_left_x + student_object.get_coordinates()[2]
+            student_bottom_right_y = student_top_left_y + student_object.get_coordinates()[3]
+            if (student_name == s['name'] or
+                ((s["box"][0]-50 <= student_top_left_x <= s["box"][0]+50) 
+            and (s["box"][1]-50  <= student_top_left_y <= s["box"][1]+50)
+            and (s["box"][2]-50  <= student_bottom_right_x <= s["box"][2]+50)
+            and (s["box"][3]-50  <= student_bottom_right_y <= s["box"][3]+50))):    
                 student_object.add_pose(s['pose'])
                 student_object.add_emotion(s['emotions'])
                 flag = True
