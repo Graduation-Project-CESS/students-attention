@@ -273,7 +273,7 @@ def main():
     global number_of_images 
     number_of_images = 0
     start_time = time.time()
-    path_list = ['testing_dataset/IMG_8607.png','testing_dataset/IMG_8608.png']
+    path_list = ['testing_dataset/IMG_8609.png','testing_dataset/IMG_8610.png','testing_dataset/IMG_8611.png']
     print("Starting the system.")
     for path in path_list:
     
