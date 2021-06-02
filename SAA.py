@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 import time
 from enum import Enum
 import copy
+import pickle 
+
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 class Pose_name(Enum):
@@ -24,18 +26,12 @@ class Pose_name(Enum):
 class Student:
 
     
-    def __init__(self, coordinates):
+    def __init__(self, coordinates, name):
         self.coordinates = coordinates
-        self.name = ''
+        self.name = name
         self.poses = []
         self.emotions = []
     
-    def set_coordinates(self, coordinates):
-        self.coordinates = coordinates
-    
-    def set_name(self,name):
-        self.name = name
-        
     def add_pose(self, pose):
         self.poses.append(pose)
         
@@ -125,15 +121,129 @@ def FindFaces(img):
                 c = 3
                 detectedFacesLoc.append([x1,y1,x2,y2,c,1])
                     
-    ################## Draw Rectangles ############################        
+    ################## Draw Rectangles ############################   
+    temp_img = copy.deepcopy(img)
+     
     for f in detectedFacesLoc:
         if (f[5] > 1):              
-            cv2.rectangle(img, (f[0],f[1]), (f[2],f[3]), (0,0,255), 2)
+            cv2.rectangle(temp_img, (f[0],f[1]), (f[2],f[3]), (0,0,255), 2)
         else:
             detectedFacesLoc.remove(f)
             
-    cv2.imwrite('./detection_output/face_image_{}.jpg'.format(number_of_images),img)
+    cv2.imwrite('./detection_output/face_image_{}.jpg'.format(number_of_images),temp_img)
     return detectedFacesLoc
+
+'''
+def face_recog(detectedFacesLoc, image):
+    
+    data=pickle.loads(open("face_encoding", 'rb').read())
+    locations=[]
+    names = []
+    
+    #for encoding in encodings:
+    for Loc in detectedFacesLoc:
+        img_crop=image[Loc[1]: Loc[3],Loc[0]:Loc[2]]
+        encodings=face_recognition.face_encodings(img_crop)
+        if len(encodings)==0:
+            img_crop=cv2.resize(img_crop, dsize=(180,180), interpolation=cv2.INTER_CUBIC)
+            encodings=face_recognition.face_encodings(img_crop)
+        for encoding in encodings:
+            print(encodings[0])
+            print('---------')
+            print(encoding)
+            print('11111111111111111111111111111111111')
+            return
+            break
+            print('-'*50)
+            match_count=0
+            matches = face_recognition.compare_faces(data['encodings'],encoding,tolerance=0.6)      
+            ##print(matches)
+            #set name =unknown if no encoding matches
+            name = "Unknown" 
+            #matches=np.array(matches)
+            for m in matches:
+                if m :
+                    match_count+=1
+            # check to see if we have found a match
+            if match_count > 5 :
+                #Find positions at which we get True and store them
+                matchedIdxs = [i for (i, b) in enumerate(matches) if b]
+                counts = {}
+                # loop over the matched indexes and maintain a count for
+                # each recognized face face
+                for i in matchedIdxs:
+                    #Check the names at respective indexes we stored in matchedIdxs
+                    name=data['names'][i]
+                    #name.append(knownnames[i])
+                    #increase count for the name we got
+                    counts[name] = counts.get(name, 0) + 1
+                    #set name which has highest count
+                    name = max(counts, key=counts.get)
+                ##print(name)
+        # update the list of names
+            names.append(name)
+            locations.append(Loc)
+    
+    print(names)
+    # loop over the recognized faces
+    for (loc, name) in zip(locations , names):
+        # draw the predicted face name on the image
+        cv2.putText(image, name, (loc[0],loc[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
+        cv2.imwrite("./recognition_output/rec_img.png",image)
+'''
+def face_recog(detectedFacesLoc, img):
+    
+    data=pickle.loads(open("face_encoding", 'rb').read())
+    names = []
+
+    #for encoding in encodings:
+    for i, Loc in enumerate(detectedFacesLoc):
+        img_crop=img[Loc[1]: Loc[3],Loc[0]:Loc[2]]
+        encodings=face_recognition.face_encodings(img_crop)
+        if len(encodings)==0:
+            img_crop=img[Loc[1] - 20: Loc[3] + 20,Loc[0] - 10:Loc[2] + 10]
+            encodings=face_recognition.face_encodings(img_crop)
+        cv2.imwrite("./cropped_faces/crop_img_{}_{}.jpg".format(number_of_images, i),img_crop) 
+        match_count=0
+        name = "Unknown" 
+        try:
+            matches = face_recognition.compare_faces(data['encodings'],encodings[0],tolerance=0.6)      
+    
+            #set name =unknown if no encoding matches
+            #matches=np.array(matches)
+            for m in matches:
+                if m :
+                    match_count+=1
+            # check to see if we have found a match
+            if match_count > 5 :
+                #Find positions at which we get True and store them
+                matchedIdxs = [i for (i, b) in enumerate(matches) if b]
+                counts = {}
+                # loop over the matched indexes and maintain a count for
+                # each recognized face face
+                for i in matchedIdxs:
+                    #Check the names at respective indexes we stored in matchedIdxs
+                    name=data['names'][i]
+                    #name.append(knownnames[i])
+                    #increase count for the name we got
+                    counts[name] = counts.get(name, 0) + 1
+                    
+                    #set name which has highest count
+                name = max(counts, key=counts.get)
+                ##print(name)
+        except:
+            print('?')                            
+        # update the list of names
+        names.append(name)
+    
+    temp_img = copy.deepcopy(img)
+    # loop over the recognized faces
+    for (loc, name) in zip(detectedFacesLoc , names):
+        # draw the predicted face name on the image
+        cv2.putText(temp_img, name, (loc[0],loc[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
+        cv2.imwrite("./recognition_output/rec_img_{}.jpg".format(number_of_images),temp_img)
+    
+    return names
 
 def write_output(img, student_dict, mode):
     temp_img = copy.deepcopy(img)
@@ -205,16 +315,20 @@ def compute_features(total_face_points):
     return total_features
 
 
-def compare_and_set_pose(detectedFacesLoc, students_dict, total_poses):
+def compare_and_set_pose(detectedFacesLoc, students_dict, total_poses, names):
     temp_dict=[]
     
-    for student in students_dict:
-        for face, pose in zip(detectedFacesLoc,total_poses):
+    for s in students_dict:
+        for face, pose, name in zip(detectedFacesLoc,total_poses, names):
             
-            if(face[0]-20 <= student["box"][0] <= face[0]+20):
-                student['box'] = face[:-2]
-                student["pose"] = pose
-                temp_dict.append(student)
+            if ((face[0]-50 <= s["box"][0] <= face[0]+50) 
+            and (face[1]-50 <= s["box"][1] <= face[1]+50)
+            and (face[2]-50 <= s["box"][0] + s["box"][2] <= face[2]+50)
+            and (face[3]-50 <= s["box"][1] + s["box"][3] <= face[3]+50)):
+                s['box'] = face[:-2]
+                s["pose"] = pose
+                s["name"] = name
+                temp_dict.append(s)
 
     return temp_dict
 
@@ -256,24 +370,48 @@ def set_emotion(students_dict):
     return students_dict
 
 def fill_students(students_dict, students_list):
+    #Assume all students will appear in the first image.
     if len(students_list)== 0:
         for s in students_dict:
-            students_list.append(Student(s['box']))
+            students_list.append(Student(s['box'], s['name']))
             
-    for student_object in  students_list:
-        student_top_left = student_object.get_coordinates()[0]
-        for student in students_dict:
-            if ( student['box'][0] - 20 < student_top_left < student['box'][0] + 20):    
-                student_object.add_pose(student['pose'])
-                student_object.add_emotion(student['emotions'])
-    
+            
+    for s in students_dict:  
+        flag = False
+        for student_object in  students_list:
+            student_name = student_object.get_name()
+            student_top_left = student_object.get_coordinates()[0]
+            if (student_name == s['name'] or (s['box'][0] - 20 < student_top_left < s['box'][0] + 20)):    
+                student_object.add_pose(s['pose'])
+                student_object.add_emotion(s['emotions'])
+                flag = True
+        if ((not flag) and s['name']!= "Unknown"):
+            new_student = Student(s['box'], s['name'])
+            new_student.add_pose(s['pose'])
+            new_student.add_emotion(s['emotions'])
+            students_list.append(new_student)
 
+def get_time(seconds):
+    seconds_in_hour = 60 * 60
+    seconds_in_minute = 60
+
+    hours = seconds // seconds_in_hour
+    minutes = (seconds  - (hours * seconds_in_hour)) // seconds_in_minute
+    seconds = seconds % minutes    
+    print("System Terminated Successfully :{} hours, {} minutes, {} seconds".format(hours, minutes, seconds))
 
 def main():
     global number_of_images 
     number_of_images = 0
     start_time = time.time()
-    path_list = ['testing_dataset/IMG_8609.png','testing_dataset/IMG_8610.png','testing_dataset/IMG_8611.png']
+    path_list = ['testing_dataset/IMG_8607.png',
+                 'testing_dataset/IMG_8608.png',
+                 'testing_dataset/IMG_8609.png',
+                 'testing_dataset/IMG_8610.png',
+                 'testing_dataset/IMG_8611.png',
+                 'testing_dataset/IMG_8612.png',
+                 'testing_dataset/IMG_8613.png',
+                 'testing_dataset/IMG_8614.png',]
     print("Starting the system.")
     for path in path_list:
     
@@ -286,6 +424,10 @@ def main():
         print("Face Locations: ", detectedFacesLoc)
         
         print('-' * 40)
+        names = face_recog(detectedFacesLoc, img)
+        print("Face Names: ", names)
+        
+        print('-' * 40)
         face_rect = to_rectangles(detectedFacesLoc)
         print("Face Rectangles: ", face_rect)
         
@@ -294,12 +436,12 @@ def main():
         print("Students' poses: ", total_poses)
         
         print('-' * 40)
-        detector = FER(mtcnn=True)    
+        detector = FER(mtcnn=True)   #Using MT CNN for face detection to improve accuracy 
         students_dict = detector.detect_emotions(img)
         print("Students' Dictionary: \n", students_dict)
         
         print('-' * 40)
-        students_dict = compare_and_set_pose(detectedFacesLoc, students_dict, total_poses)
+        students_dict = compare_and_set_pose(detectedFacesLoc, students_dict, total_poses, names)
         print("Students Dictionary after removing the incorrect faces (if exists) and setting the pose of each student: \n", students_dict)
         img = write_output(img, students_dict, 'pose')
 
@@ -318,8 +460,9 @@ def main():
     for student_object in  students_list:    
         student_object.print_student()
         print('#'*40)
+    
     print('-' * 40)
-    print("System Terminated Successfully in {} sec ".format(execution_time))
+    get_time(execution_time)
     
 ############################# Start of code ###################################
 students_list =[]
