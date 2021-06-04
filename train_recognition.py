@@ -1,5 +1,4 @@
 import face_recognition
-import csv
 import cv2
 import pickle
 from imutils import paths
@@ -61,21 +60,14 @@ def FindFaces(img):
                 detectedFacesLoc.append([x1,y1,x2,y2,c,1])
   
                 
-    if (detectedFacesLoc[0][5] > 1):              
-        if (detectedFacesLoc[0][4] == 1) :
-            face_crop=img[detectedFacesLoc[0][1]: detectedFacesLoc[0][3],
-                          detectedFacesLoc[0][0]:detectedFacesLoc[0][2]]
-        elif (detectedFacesLoc[0][4] == 2) :
-            face_crop=img[detectedFacesLoc[0][1]: detectedFacesLoc[0][3],
-                          detectedFacesLoc[0][0]:detectedFacesLoc[0][2]]
-        else:
-            face_crop=img[detectedFacesLoc[0][1]: detectedFacesLoc[0][3],
-                          detectedFacesLoc[0][0]:detectedFacesLoc[0][2]]
+    if (detectedFacesLoc[0][5] > 1 or len(detectedFacesLoc)== 1): 
+        face_crop=img[detectedFacesLoc[0][1]: detectedFacesLoc[0][3],
+                          detectedFacesLoc[0][0]:detectedFacesLoc[0][2]]             
     else:
         detectedFacesLoc.remove(detectedFacesLoc[0])
-        face_crop=img 
+        face_crop=img  
   
-    return face_crop
+    return face_crop, detectedFacesLoc
 
 
 #get paths of each file in folder named Images
@@ -87,7 +79,6 @@ knownNames = []
 for (i, imagePath) in enumerate(imagePaths):
     # extract the person name from the image path
     name = (Path(imagePath).stem).split(sep=" ")[0]
-    # load the input image and convert it from BGR (OpenCV ordering)
     # to dlib ordering (RGB)
     image = cv2.imread(imagePath)
     im_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -95,12 +86,18 @@ for (i, imagePath) in enumerate(imagePaths):
     if h > 1280 and w > 720:
         im_rgb=cv2.resize(im_rgb, dsize=(1280,720), interpolation=cv2.INTER_CUBIC)
         
-    detect_face_img= FindFaces(im_rgb);
+    detect_face_img , face_location= FindFaces(im_rgb);
     #Use Face_recognition to locate faces
     # compute the facial embedding for the face
     encodings = face_recognition.face_encodings(detect_face_img)
+    if (len(encodings)==0 and len(face_location)!=0):
+        new_img = im_rgb[face_location[0][1] - 20: face_location[0][3] + 20,
+                                  face_location[0][0] - 10:face_location[0][2] + 10]
+        encodings = face_recognition.face_encodings(new_img)
+        
     if len(encodings)==0:
         encodings = face_recognition.face_encodings(im_rgb)
+        
     for encoding in encodings:
         if len(encoding) !=0:
             print("Done image of ", i)
@@ -117,7 +114,6 @@ f = open("face_encoding", "wb")
 f.write(pickle.dumps(data))
 
 f.close()
-#filename = "face_encoding.csv"
     
 # writing to csv file 
 '''with open("face_encoding.csv", 'w') as csvfile: 
