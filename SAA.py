@@ -13,8 +13,13 @@ import time
 from enum import Enum
 import copy
 import pickle 
+import csv
+import glob
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
+
+####################### System Classes #####################################       
 
 class Pose_name(Enum):
     right = 0
@@ -23,14 +28,19 @@ class Pose_name(Enum):
     slightly_left = 3
     left = 4
 
+
+
 class Student:
 
     
     def __init__(self, coordinates, name):
         self.coordinates = coordinates
         self.name = name
+        self.id = students_ids[name]
         self.poses = []
         self.emotions = []
+        self.attendance = 0
+        self.attention = 0
     
     def add_pose(self, pose):
         self.poses.append(pose)
@@ -44,17 +54,79 @@ class Student:
     def get_name(self):
         return self.name
     
+    def get_id(self):
+        return self.id
+    
     def get_poses(self):
         return self.poses
     
     def get_emotions(self):
         return self.emotions
-   
+
+    def get_attention(self):
+        return self.attention
+    
+    def get_attendance(self):
+        return self.attendance
+    
+    def set_attention(self):
+        temp_attention = 0.0
+        for pose, emotion in zip(self.poses, self.emotions):
+            if(pose in [2,3]):
+                if (emotion in ['happy', 'neutral']):
+                    temp_attention += 5.0
+                else:
+                    temp_attention += 4.0
+            
+            elif(pose ==4):
+                if (emotion in ['happy', 'neutral']):
+                    temp_attention += 4.0
+                else:
+                    temp_attention += 3.0
+            
+            elif(pose ==1):
+                temp_attention += 2.0
+            
+            else:
+                temp_attention += 1.0
+        
+        #calculate weighted average attention for students scaling from [1,5]
+        self.attention = temp_attention / float(len(self.poses))
+
+        #convert it into percentage
+        self.attention = (self.attention / 5.0) * 100
+        
+    def set_attendacne(self):
+        temp_attendance = 0.0
+        for pose in self.poses:
+            if(pose in [2,3]):
+                temp_attendance += 5.0
+           
+            elif(pose ==4):
+                temp_attendance += 4.0
+
+            elif(pose ==1):
+                temp_attendance += 2.0
+                
+            else:
+                temp_attendance += 1.0
+        
+        self.attendance = temp_attendance / float(number_of_images)
+        
     def print_student(self):
         print("Coordinates: {}".format(self.coordinates))
         print("Name: {}".format(self.name))
+        print("ID: {}".format(self.id))
         print("Poses: {}".format(self.poses))
         print("Emotions: {}".format(self.emotions))
+
+
+class mini_student:
+    def __init__(self,ID,name,attendance):
+        self.id = ID
+        self.name = name
+        self.attendance = attendance
+        
         
 ####################### System Functions #####################################       
 def load_image(path):
@@ -133,64 +205,7 @@ def FindFaces(img):
     cv2.imwrite('./detection_output/face_image_{}.jpg'.format(number_of_images),temp_img)
     return detectedFacesLoc
 
-'''
-def face_recog(detectedFacesLoc, image):
-    
-    data=pickle.loads(open("face_encoding", 'rb').read())
-    locations=[]
-    names = []
-    
-    #for encoding in encodings:
-    for Loc in detectedFacesLoc:
-        img_crop=image[Loc[1]: Loc[3],Loc[0]:Loc[2]]
-        encodings=face_recognition.face_encodings(img_crop)
-        if len(encodings)==0:
-            img_crop=cv2.resize(img_crop, dsize=(180,180), interpolation=cv2.INTER_CUBIC)
-            encodings=face_recognition.face_encodings(img_crop)
-        for encoding in encodings:
-            print(encodings[0])
-            print('---------')
-            print(encoding)
-            print('11111111111111111111111111111111111')
-            return
-            break
-            print('-'*50)
-            match_count=0
-            matches = face_recognition.compare_faces(data['encodings'],encoding,tolerance=0.6)      
-            ##print(matches)
-            #set name =unknown if no encoding matches
-            name = "Unknown" 
-            #matches=np.array(matches)
-            for m in matches:
-                if m :
-                    match_count+=1
-            # check to see if we have found a match
-            if match_count > 5 :
-                #Find positions at which we get True and store them
-                matchedIdxs = [i for (i, b) in enumerate(matches) if b]
-                counts = {}
-                # loop over the matched indexes and maintain a count for
-                # each recognized face face
-                for i in matchedIdxs:
-                    #Check the names at respective indexes we stored in matchedIdxs
-                    name=data['names'][i]
-                    #name.append(knownnames[i])
-                    #increase count for the name we got
-                    counts[name] = counts.get(name, 0) + 1
-                    #set name which has highest count
-                    name = max(counts, key=counts.get)
-                ##print(name)
-        # update the list of names
-            names.append(name)
-            locations.append(Loc)
-    
-    print(names)
-    # loop over the recognized faces
-    for (loc, name) in zip(locations , names):
-        # draw the predicted face name on the image
-        cv2.putText(image, name, (loc[0],loc[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
-        cv2.imwrite("./recognition_output/rec_img.png",image)
-'''
+
 def face_recog(detectedFacesLoc, img):
     
     data=pickle.loads(open("face_encoding", 'rb').read())
@@ -232,7 +247,7 @@ def face_recog(detectedFacesLoc, img):
                 name = max(counts, key=counts.get)
                 ##print(name)
         except:
-            print('?')                            
+            print('Unrecognized face')                            
         # update the list of names
         names.append(name)
     
@@ -257,7 +272,6 @@ def write_output(img, student_dict, mode):
         cv2.putText(temp_img, text_to_display, (location[0] + 10, location[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255,0,0), 2)
             
     cv2.imwrite('./{}_output/face_image_{}.jpg'.format(mode, number_of_images),temp_img)
-    return img
 
 def to_rectangles(detectedFacesLoc):
     face_rect=dlib.rectangles()
@@ -341,39 +355,14 @@ def set_emotion(students_dict):
         student["emotions"] = list(student["emotions"].items())
         
         student["emotions"] = student["emotions"][-1][0]
-        '''
-        if(dominant_emotion == "happy" and student_pose > 1):
-            attention[4] +=1  
-            student["emotions"] = 1
-        elif(dominant_emotion == "neutral" and student_pose > 1):
-            attention[3] +=1  
-            student["emotions"] = 0
-        elif(student_pose):
-            attention[2] +=1  
-            student["emotions"] = -1
-        elif(dominant_emotion == "happy" and student_pose == 1):
-            attention[1] +=1 
-            student["emotions"] = 1
-        elif(dominant_emotion == "neutral" and student_pose == 1):
-            attention[1] +=1 
-            student["emotions"] = 0
-        elif(dominant_emotion == "neutral" and student_pose < 1):
-            attention[0] +=1 
-            student["emotions"] = 0   
-        elif(dominant_emotion == "happy" and student_pose < 1):
-            attention[0] +=1 
-            student["emotions"] = 1   
-        else:
-            attention[0] +=1 
-            student["emotions"] = -1
-        '''
+
     return students_dict
 
 def fill_students(students_dict, students_list):
     #Assume all students will appear in the first image.
-    if len(students_list)== 0:
-        for s in students_dict:
-            students_list.append(Student(s['box'], s['name']))
+    # if len(students_list)== 0:
+    #     for s in students_dict:
+    #         students_list.append(Student(s['box'], s['name']))
             
             
     for s in students_dict:  
@@ -407,71 +396,138 @@ def get_time(seconds):
     seconds = seconds % minutes    
     print("System Terminated Successfully :{} hours, {} minutes, {} seconds".format(hours, minutes, seconds))
 
-def main():
-    global number_of_images 
-    number_of_images = 0
-    start_time = time.time()
-    path_list = ['testing_dataset/IMG_8607.png',
-                 'testing_dataset/IMG_8608.png',
-                 'testing_dataset/IMG_8609.png',
-                 'testing_dataset/IMG_8610.png',
-                 'testing_dataset/IMG_8611.png',
-                 'testing_dataset/IMG_8612.png',
-                 'testing_dataset/IMG_8613.png',
-                 'testing_dataset/IMG_8614.png',]
-    print("Starting the system.")
-    for path in path_list:
-    
-        print('-' * 40)
-        img = load_image(path)
-        print("Loaded Image Successfully.")
-        
-        print('-' * 40)
-        detectedFacesLoc = FindFaces(img) 
-        print("Face Locations: ", detectedFacesLoc)
-        
-        print('-' * 40)
-        names = face_recog(detectedFacesLoc, img)
-        print("Face Names: ", names)
-        
-        print('-' * 40)
-        face_rect = to_rectangles(detectedFacesLoc)
-        print("Face Rectangles: ", face_rect)
-        
-        print('-' * 40)
-        total_poses = get_pose(img, face_rect)
-        print("Students' poses: ", total_poses)
-        
-        print('-' * 40)
-        detector = FER(mtcnn=True)   #Using MT CNN for face detection to improve accuracy 
-        students_dict = detector.detect_emotions(img)
-        print("Students' Dictionary: \n", students_dict)
-        
-        print('-' * 40)
-        students_dict = compare_and_set_pose(detectedFacesLoc, students_dict, total_poses, names)
-        print("Students Dictionary after removing the incorrect faces (if exists) and setting the pose of each student: \n", students_dict)
-        img = write_output(img, students_dict, 'pose')
-
-        print('-' * 40)
-        students_dict = set_emotion(students_dict)
-        print("Students dictionary after adding the dominant emotion for each student: \n",students_dict)
-        
-        img = write_output(img, students_dict, 'emotions')
-
-        print('-' * 40)
-        fill_students(students_dict, students_list)
-        
-        number_of_images +=1
-        
-    execution_time = time.time() - start_time
+def print_students(students_list):
     for student_object in  students_list:    
         student_object.print_student()
         print('#'*40)
+
+def set_statistics(students_list):
+    for student in students_list:
+        student.set_attendacne()
+        student.set_attention()
+
+
+def generate_report(students_list): 
+    set_statistics(students_list)
+        
+    with open('./reports/report_{}.csv'.format(number_of_reports), mode='w', newline='') as file:
+        file_write = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        file_write.writerow(['ID', 'Name', 'Attention', 'Attendance'])
+        for student in students_list:
+            ID = student.get_id()
+            name = student.get_name()
+            attention = student.get_attention()
+            attendance = student.get_attendance()           
+            file_write.writerow([ID, name, str(attention) + " %", str(attendance)])    
     
+    students_list.clear()
+   
+def generate_attendance_sheet():
+    mini_students = []
+    for i in range(number_of_reports):
+        with open('./reports/report_{}.csv'.format(i)) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            line_count = 0
+            for row in csv_reader:
+                print(row)
+                if line_count == 0:
+                    print(f'Column names are {", ".join(row)}')
+                    line_count += 1
+                else:
+                    flag = False
+                    for s in mini_students:
+                        if (s.id == row[0]):
+                            flag = True
+                            s.attendance += float(row[3])
+                    if not flag:
+                        temp = mini_student(row[0], row[1], float(row[3]))
+                        mini_students.append(temp)
+                    
+                    line_count += 1
+            print(f'Processed {line_count} lines.')
+        with open('./reports/attendance.csv', mode='w',newline='') as file:
+            file_write = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            file_write.writerow(['ID', 'Name', 'Attendance'])
+            for s in mini_students:
+                #ID = student.get_id()
+                #name = student.get_name()
+                #attention = student.get_attention()
+                #attendance = student.get_attendance()           
+                file_write.writerow([s.id, s.name, str(float(s.attendance)/number_of_reports)])  
+    
+def analyze_image(path):
     print('-' * 40)
-    get_time(execution_time)
+    img = load_image(path)
+    print("Loaded Image Successfully.")
     
+    #print('-' * 40)
+    detectedFacesLoc = FindFaces(img) 
+    #print("Face Locations: ", detectedFacesLoc)
+    
+    #print('-' * 40)
+    names = face_recog(detectedFacesLoc, img)
+    #print("Face Names: ", names)
+    
+    #print('-' * 40)
+    face_rect = to_rectangles(detectedFacesLoc)
+    #print("Face Rectangles: ", face_rect)
+    
+    #print('-' * 40)
+    total_poses = get_pose(img, face_rect)
+    #print("Students' poses: ", total_poses)
+    
+    #print('-' * 40)
+    detector = FER(mtcnn=True)   #Using MT CNN for face detection to improve accuracy 
+    students_dict = detector.detect_emotions(img)
+    #print("Students' Dictionary: \n", students_dict)
+    
+    #print('-' * 40)
+    students_dict = compare_and_set_pose(detectedFacesLoc, students_dict, total_poses, names)
+    #print("Students Dictionary after removing the incorrect faces (if exists) and setting the pose of each student: \n", students_dict)
+    write_output(img, students_dict, 'pose')
+
+    #print('-' * 40)
+    students_dict = set_emotion(students_dict)
+    #print("Students dictionary after adding the dominant emotion for each student: \n",students_dict)
+    
+    write_output(img, students_dict, 'emotions')
+
+    #print('-' * 40)
+    fill_students(students_dict, students_list)
+    
+
+def main():
+    global number_of_images 
+    global number_of_reports 
+    number_of_reports = 0
+    
+    start_time = time.time()
+    path_list = glob.glob("final_dataset/*.png")
+    
+    print("Starting the system.")
+    for i in range(2):
+        number_of_images = 0
+        for path in path_list[i*2 : (i*2)+2]:
+            analyze_image(path)
+            number_of_images +=1    
+        
+        print('-' * 40) 
+        print_students(students_list)
+        print('-' * 40) 
+        generate_report(students_list)
+        number_of_reports +=1    
+        
+    generate_attendance_sheet()
+    
+    execution_time = time.time() - start_time
+    get_time(execution_time)
 ############################# Start of code ###################################
+
+students_ids = {"zeid":"16p6066",
+                "soheil":"16p3007",
+                "mayar":"16p6030",
+                "rowan":"16p3023"
+                }
 students_list =[]
 main()
 
