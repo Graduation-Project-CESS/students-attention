@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Jun 16 16:44:42 2021
+
+@author: zeids
+"""
 import cv2 
 #from tqdm import tqdm
 import cvlib as cv
@@ -392,15 +398,9 @@ def get_time(seconds):
     seconds_in_minute = 60
 
     hours = seconds // seconds_in_hour
-    print("hour: ", hours)
-
     minutes = (seconds  - (hours * seconds_in_hour)) // seconds_in_minute
-    print("minute: ", minutes)   
-    
-    seconds = seconds - (minutes * seconds_in_minute)
-    print("seconds: ", seconds)
-    time = (hours, minutes, seconds)
-    return time    
+    seconds = seconds % minutes    
+    print("System Terminated Successfully :{} hours, {} minutes, {} seconds".format(hours, minutes, seconds))
 
 def print_students(students_list):
     for student_object in  students_list:    
@@ -413,7 +413,7 @@ def set_statistics(students_list):
         student.set_attention()
 
 
-def generate_report(students_list,number_of_reports): 
+def generate_report(students_list): 
     set_statistics(students_list)
         
     with open('./reports/report_{}.csv'.format(number_of_reports), mode='w', newline='') as file:
@@ -428,9 +428,8 @@ def generate_report(students_list,number_of_reports):
     
     students_list.clear()
    
-def generate_attendance_sheet(number_of_reports):
+def generate_attendance_sheet():
     mini_students = []
-    print('number of reports in att = ', number_of_reports)
     for i in range(number_of_reports):
         with open('./reports/report_{}.csv'.format(i)) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
@@ -503,31 +502,31 @@ def analyze_image(path):
     fill_students(students_dict, students_list)
     
 
-def run(current_image, number_of_reports):
+def main():
     global number_of_images 
+    global number_of_reports 
+    number_of_reports = 0
+    
     start_time = time.time()
     path_list = glob.glob("final_dataset/*.png")
     
     print("Starting the system.")
-    minutes = 0
-    number_of_images = 0
-    while minutes < 1:
-        analyze_image(path_list[current_image])
+    for i in range(2):
+        number_of_images = 0
+        for path in path_list[i*2 : (i*2)+2]:
+            analyze_image(path)
+            number_of_images +=1    
         
-        current_image += 1
-        number_of_images +=1            
         print('-' * 40) 
-        execution_time = time.time() - start_time
-        print("execution time: ", execution_time)
-        hours, minutes, seconds = get_time(execution_time)
-    print_students(students_list)
-    print('-' * 40) 
-    generate_report(students_list, number_of_reports)
-    return current_image  
+        print_students(students_list)
+        print('-' * 40) 
+        generate_report(students_list)
+        number_of_reports +=1    
+        
+    generate_attendance_sheet()
     
-
-#print("System Terminated Successfully :{} hours, {} minutes, {} seconds".format(hours, minutes, seconds))
-
+    execution_time = time.time() - start_time
+    get_time(execution_time)
 ############################# Start of code ###################################
 
 students_ids = {"zeid":"16p6066",
@@ -538,5 +537,5 @@ students_ids = {"zeid":"16p6066",
 students_list =[]
 
 if __name__ == '__main__':
-    run()
+    main()
 
