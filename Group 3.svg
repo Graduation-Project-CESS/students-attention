@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="226" height="219" viewBox="0 0 226 219">
+  <defs>
+    <radialGradient id="radial-gradient" cx="0.048" cy="0.433" r="0.712" gradientTransform="matrix(1, 0, 0, 0.981, 0, 0.008)" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#057e80"/>
+      <stop offset="1" stop-color="#2c6e9b"/>
+    </radialGradient>
+    <filter id="Ellipse_3" x="0" y="0" width="217" height="219" filterUnits="userSpaceOnUse">
+      <feOffset dy="2" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feFlood flood-opacity="0.161"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <radialGradient id="radial-gradient-2" cx="0.048" cy="0.433" r="0.712" gradientTransform="matrix(1, 0, 0, 0.981, 0, 0.008)" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#06a0a2"/>
+      <stop offset="1" stop-color="#2c6e9b"/>
+    </radialGradient>
+    <filter id="Ellipse_2" x="9" y="0" width="217" height="219" filterUnits="userSpaceOnUse">
+      <feOffset dy="2" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="12" result="blur-2"/>
+      <feFlood flood-opacity="0.161"/>
+      <feComposite operator="in" in2="blur-2"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g id="Group_3" data-name="Group 3" transform="translate(36.344 33.654)">
+    <g transform="matrix(1, 0, 0, 1, -36.34, -33.65)" filter="url(#Ellipse_3)">
+      <ellipse id="Ellipse_3-2" data-name="Ellipse 3" cx="72.5" cy="73.5" rx="72.5" ry="73.5" transform="translate(36 34)" fill="url(#radial-gradient)"/>
+    </g>
+    <g transform="matrix(1, 0, 0, 1, -36.34, -33.65)" filter="url(#Ellipse_2)">
+      <ellipse id="Ellipse_2-2" data-name="Ellipse 2" cx="72.5" cy="73.5" rx="72.5" ry="73.5" transform="translate(45 34)" fill="url(#radial-gradient-2)"/>
+    </g>
+  </g>
+</svg>

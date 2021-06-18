@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SelectAcourse</class>
+ <widget class="QMainWindow" name="SelectAcourse">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>750</width>
+    <height>515</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Select a Course</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: rgb(222, 234, 228);
+wondow-title:&quot;Select a Course&quot;;</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QLabel" name="course_label">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>170</y>
+      <width>381</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Montserrat SemiBold</family>
+      <pointsize>16</pointsize>
+      <weight>7</weight>
+      <italic>false</italic>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(33, 82, 115);
+font: 63 16pt &quot;Montserrat SemiBold&quot;;
+</string>
+    </property>
+    <property name="text">
+     <string>Select One of your Courses</string>
+    </property>
+   </widget>
+   <widget class="QDateTimeEdit" name="dateTimeEdit">
+    <property name="geometry">
+     <rect>
+      <x>280</x>
+      <y>80</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(243, 243, 243);
+color: rgb(33, 82, 115);
+selection-background-color: rgb(222, 234, 228);
+border-radius:10px;</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="date_label">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>40</y>
+      <width>141</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Montserrat Medium</family>
+      <pointsize>12</pointsize>
+      <weight>7</weight>
+      <italic>false</italic>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(33, 82, 115);
+font: 57 12pt &quot;Montserrat Medium&quot;;</string>
+    </property>
+    <property name="text">
+     <string>Select a Date</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="start_btn">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>340</y>
+      <width>161</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(216, 216, 216); color: rgb(99, 99, 99); border-radius: 15px; border-style:outset;border-color:  rgb(99, 99, 99);
+</string>
+    </property>
+    <property name="text">
+     <string>Start Lecture</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="comboBox">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>240</y>
+      <width>251</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius:10px;
+background-color: rgb(243, 243, 243);
+color: rgb(33, 82, 115);
+selection-background-color: lightgray;</string>
+    </property>
+    <item>
+     <property name="text">
+      <string>Choose</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Object Oriented Analysis</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Software Engineering</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Computer Vision</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QLabel" name="c2">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>360</y>
+      <width>291</width>
+      <height>251</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>rings2.svg</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="c3">
+    <property name="geometry">
+     <rect>
+      <x>500</x>
+      <y>120</y>
+      <width>221</width>
+      <height>221</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>rings1.svg</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="c1">
+    <property name="geometry">
+     <rect>
+      <x>-80</x>
+      <y>-30</y>
+      <width>151</width>
+      <height>151</height>
+     </rect>
+    </property>
+    <property name="toolTipDuration">
+     <number>-5</number>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>Group 1.svg</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <zorder>c2</zorder>
+   <zorder>course_label</zorder>
+   <zorder>dateTimeEdit</zorder>
+   <zorder>date_label</zorder>
+   <zorder>start_btn</zorder>
+   <zorder>comboBox</zorder>
+   <zorder>c3</zorder>
+   <zorder>c1</zorder>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>750</width>
+     <height>26</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources>
+  <include location="app_images/circle1.qrc"/>
+  <include location="app_images/cylinder.qrc"/>
+  <include location="app_images/circle2.qrc"/>
+ </resources>
+ <connections/>
+</ui>
