@@ -5,8 +5,8 @@ from PyQt5.uic import loadUi
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtWidgets import QMainWindow, QDialog, QVBoxLayout, QHBoxLayout
 
-filestoWatch  = "./Reports/Report1.xlsx"
-editorProgram = 'notepad'
+filestoWatch  = "./Reports/Report1.csv"
+
 
 class courses_window(QMainWindow):
     def __init__(self):
@@ -138,10 +138,7 @@ class notif_window(QMainWindow):
         file_name=file_name.split(".")[0]
         print("file_name",file_name)
         if (btn_name==file_name):
-            process= QtCore.QProcess(self)
-            process.start(editorProgram, [filestoWatch])
-            self.setEnabled(False)
-            process.finished.connect(lambda: self.setEnabled(True))
+            os.startfile(os.path.normpath(filestoWatch))
         
 class Dialog(QDialog):
     def __init__(self):
