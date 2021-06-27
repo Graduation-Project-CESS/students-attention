@@ -416,7 +416,7 @@ def set_statistics(students_list):
 def generate_report(students_list,number_of_reports): 
     set_statistics(students_list)
         
-    with open('./reports/report_{}.csv'.format(number_of_reports), mode='w', newline='') as file:
+    with open('./reports/Report{}.csv'.format(number_of_reports), mode='w', newline='') as file:
         file_write = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         file_write.writerow(['ID', 'Name', 'Attention', 'Attendance'])
         for student in students_list:
@@ -432,7 +432,7 @@ def generate_attendance_sheet(number_of_reports):
     mini_students = []
     print('number of reports in att = ', number_of_reports)
     for i in range(number_of_reports):
-        with open('./reports/report_{}.csv'.format(i)) as csv_file:
+        with open('./reports/Report{}.csv'.format(i)) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
             line_count = 0
             for row in csv_reader:

@@ -15,7 +15,7 @@
   </property>
   <property name="styleSheet">
    <string notr="true">background-color: rgb(222, 234, 228);
-wondow-title:&quot;Select a Course&quot;;</string>
+window-title:&quot;Select a Course&quot;;</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLabel" name="course_label">

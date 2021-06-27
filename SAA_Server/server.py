@@ -35,11 +35,13 @@ def send(data,clientsocket):
 
 def send_report(number_of_reports, clientsocket):
     report = []
-    with open('./reports/report_{}.csv'.format(number_of_reports)) as csv_file:
+    print(number_of_reports)
+    report.append(number_of_reports)
+    with open('./reports/Report{}.csv'.format(number_of_reports)) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
             report.append(row)
-        send(report, clientsocket)
+    send(report, clientsocket)
         
 def start_analysis(current_image, number_of_reports, clientsocket):
     while True:
