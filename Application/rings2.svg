@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="406.069" height="406.068" viewBox="0 0 406.069 406.068">
+  <defs>
+    <filter id="Subtraction_4" x="0" y="0" width="406.069" height="406.068" filterUnits="userSpaceOnUse">
+      <feOffset dx="-4" dy="3" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feFlood flood-color="#52acd9" flood-opacity="0.949"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <linearGradient id="linear-gradient" x1="0.5" x2="0.5" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#1876a3"/>
+      <stop offset="1" stop-color="#10747b"/>
+    </linearGradient>
+    <filter id="Subtraction_5" x="85.904" y="85.904" width="234.26" height="234.26" filterUnits="userSpaceOnUse">
+      <feOffset dx="-4" dy="3" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="5" result="blur-2"/>
+      <feFlood flood-color="#52acd9" flood-opacity="0.949"/>
+      <feComposite operator="in" in2="blur-2"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g id="rings2" transform="translate(-193.901 -528)">
+    <g transform="matrix(1, 0, 0, 1, 193.9, 528)" filter="url(#Subtraction_4)">
+      <path id="Subtraction_4-2" data-name="Subtraction 4" d="M135.449,270.9A135.483,135.483,0,0,1,82.732,10.644,135.405,135.405,0,0,1,270.9,135.448a133.948,133.948,0,0,1-12.624,57.108,136.27,136.27,0,0,1-14.788,24.517,139.635,139.635,0,0,1-19.552,20.934A134.557,134.557,0,0,1,135.449,270.9Zm0-228.124a92.676,92.676,0,1,0,92.682,92.675A92.781,92.781,0,0,0,135.449,42.773Z" transform="translate(170.48 12) rotate(34)" fill="#4ba69c"/>
+    </g>
+    <g transform="matrix(1, 0, 0, 1, 193.9, 528)" filter="url(#Subtraction_5)">
+      <path id="Subtraction_5-2" data-name="Subtraction 5" d="M73.569,147.137A73.587,73.587,0,0,1,44.936,5.781a73.545,73.545,0,0,1,102.2,67.786,72.753,72.753,0,0,1-6.857,31.018,74.015,74.015,0,0,1-8.032,13.316,75.837,75.837,0,0,1-10.62,11.37A73.084,73.084,0,0,1,73.569,147.137Zm0-123.9a50.336,50.336,0,1,0,50.34,50.336A50.394,50.394,0,0,0,73.569,23.232Z" transform="translate(187.18 97.9) rotate(34)" fill="url(#linear-gradient)"/>
+    </g>
+  </g>
+</svg>
