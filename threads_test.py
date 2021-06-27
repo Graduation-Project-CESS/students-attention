@@ -11,6 +11,7 @@ def dummy(itr):
         print(i)
         time.sleep(1)
 if __name__ == '__main__':
+    print('hii')
     proc = multiprocessing.Process(target=dummy, args=(100,))
     proc.start()
     time.sleep(5)

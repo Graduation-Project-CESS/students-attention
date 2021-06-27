@@ -452,15 +452,15 @@ def generate_attendance_sheet(number_of_reports):
                     
                     line_count += 1
             print(f'Processed {line_count} lines.')
-        with open('./reports/attendance.csv', mode='w',newline='') as file:
-            file_write = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            file_write.writerow(['ID', 'Name', 'Attendance'])
-            for s in mini_students:
-                #ID = student.get_id()
-                #name = student.get_name()
-                #attention = student.get_attention()
-                #attendance = student.get_attendance()           
-                file_write.writerow([s.id, s.name, str(float(s.attendance)/number_of_reports)])  
+    with open('./reports/attendance.csv', mode='w',newline='') as file:
+        file_write = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        file_write.writerow(['ID', 'Name', 'Attendance'])
+        for s in mini_students:
+            #ID = student.get_id()
+            #name = student.get_name()
+            #attention = student.get_attention()
+            #attendance = student.get_attendance()           
+            file_write.writerow([s.id, s.name, str(float(s.attendance)/number_of_reports)])  
     
 def analyze_image(path):
     print('-' * 40)

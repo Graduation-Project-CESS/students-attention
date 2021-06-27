@@ -10,42 +10,42 @@ import pickle
 import SAA
 import threading
 import csv
-
+import multiprocessing
 
 def receive():
     full_msg = b''
-    new_msg = True    
+    start_msg = True    
     while True:
         msg = clientsocket.recv(16)
         if len(msg) == 0:
             return None 
-        if new_msg:
+        if start_msg:
             msglen = int(msg[:HEADERSIZE])
-            new_msg = False
+            start_msg = False
 
         full_msg += msg
 
         if len(full_msg)-HEADERSIZE == msglen:
             return pickle.loads(full_msg[HEADERSIZE:])
 
-def send(data):
+def send(data,clientsocket):
     msg = pickle.dumps(data)
     msg = bytes(f"{len(msg):<{HEADERSIZE}}", 'utf-8') + msg
     clientsocket.send(msg)
 
-def send_report(number_of_reports):
+def send_report(number_of_reports, clientsocket):
     report = []
     with open('./reports/report_{}.csv'.format(number_of_reports)) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
             report.append(row)
-        send(report)
+        send(report, clientsocket)
         
-def start_analysis(current_image, number_of_reports):
+def start_analysis(current_image, number_of_reports, clientsocket):
     while True:
-        current_image = SAA.run(current_image, number_of_reports)
-        send_report(number_of_reports)
-        number_of_reports +=1    
+        current_image = SAA.run(current_image, number_of_reports[0])
+        send_report(number_of_reports[0], clientsocket)
+        number_of_reports[0] +=1    
 
 def check_stop():
     while True:
@@ -54,7 +54,7 @@ def check_stop():
             print('stop received')
             return
  
-def send_attendance_sheet(number_of_reports):
+def send_attendance_sheet(number_of_reports, clientsocket):
     print('in att sheet')
     SAA.generate_attendance_sheet(number_of_reports)
     attendance_sheet = []
@@ -62,36 +62,45 @@ def send_attendance_sheet(number_of_reports):
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
             attendance_sheet.append(row)
-        send(attendance_sheet)          
+        send(attendance_sheet,clientsocket)          
+
 
 HEADERSIZE = 10
-
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind((socket.gethostname(), 1243))
-s.listen(5)
-current_image = 0
-global number_of_reports
-number_of_reports = 0 
-print("Server started at port: 1243!")
-
-while True:
-    # now our endpoint knows about the OTHER endpoint.
-    clientsocket, address = s.accept()
-    print(f"Connection from {address} has been established.")
-
+port = 5000
+if __name__ == '__main__':
+    
+    
+    
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind((socket.gethostname(), port))
+    s.listen(5)
+    current_image = 0
+    number_of_reports = multiprocessing.Array("i", [0])
+    # global number_of_reports
+    # number_of_reports = 0 
+    print("Server started at port: {} !".format(port))
+    
     while True:
-        message = receive()
-        if message is not None:
-            print(message)
-            if message == 'start':
-                try:
-                    tid = threading.Thread(target = start_analysis, args = (current_image, number_of_reports, ) )
-                    tid.start()
-                    check_stop()
-                    tid.join()
-                    send_attendance_sheet(number_of_reports)
-                except Exception as e:
-                    print (e)
+        # now our endpoint knows about the OTHER endpoint.
+        global clientsocket
+        clientsocket, address = s.accept()
+        print(f"Connection from {address} has been established.")
+    
+        while True:
+            message = receive()
+            if message is not None:
+                print(message)
+                if message == 'start':
+                    try:
+                        tid = multiprocessing.Process(target=start_analysis, args=(current_image,number_of_reports,clientsocket,  ))
+                        tid.start()
+                        check_stop()
+                        tid.terminate()
+                        send_attendance_sheet(number_of_reports[0], clientsocket)
+                        break
+                    except Exception as e:
+                        print (e)
+                
 
             
         
