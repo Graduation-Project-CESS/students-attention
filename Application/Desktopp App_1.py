@@ -4,8 +4,38 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.uic import loadUi
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtWidgets import QMainWindow, QDialog, QVBoxLayout, QHBoxLayout
+import socket
+import pickle
+######################################################
+HEADERSIZE = 10
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((socket.gethostname(), 5000))
+######################################################
 
 filestoWatch  = "./Reports/Report1.csv"
+
+
+
+def send(msg):
+    msg = pickle.dumps(msg)
+    msg = bytes(f"{len(msg):<{HEADERSIZE}}", 'utf-8') + msg
+    s.send(msg)
+
+def receive():
+    full_msg = b''
+    new_msg = True    
+    while True:
+        msg = s.recv(16)
+        if len(msg) == 0:
+            return None 
+        if new_msg:
+            msglen = int(msg[:HEADERSIZE])
+            new_msg = False
+
+        full_msg += msg
+
+        if len(full_msg)-HEADERSIZE == msglen:
+            return pickle.loads(full_msg[HEADERSIZE:])
 
 
 class courses_window(QMainWindow):
@@ -23,10 +53,13 @@ class courses_window(QMainWindow):
             self.start_btn.setEnabled(True)
             
     def open_startWindow(self):  
+        msg = 'start'
+        send(msg)
+        print('Message: {} sent to server!'.format(msg))   
         StartWindow=start_window()
         widget.addWidget(StartWindow)
         widget.setCurrentIndex(widget.currentIndex()+1)
-   
+
         
  
 class start_window(QMainWindow):
