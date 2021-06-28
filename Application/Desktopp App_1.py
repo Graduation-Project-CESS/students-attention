@@ -3,13 +3,16 @@ import os
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.uic import loadUi
 from PyQt5 import QtWidgets, uic
-from PyQt5.QtWidgets import QMainWindow, QDialog, QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QMessageBox
 import socket
 import pickle
 import csv
 import multiprocessing
 import ctypes
 import glob
+import os
+import cv2
+from datetime import date
 
 ######################################################
 
@@ -19,6 +22,36 @@ HEADERSIZE = 10
 
 
 
+def receive_images(s, number_of_reports):
+    directory_path = './images/Report {}'.format(number_of_reports)
+    
+    if not os.path.exists(directory_path):
+        os.mkdir(directory_path)
+    
+    images = receive_image_bytes(s)
+    while len(images) == 0:
+        images = receive_image_bytes(s)
+    
+    print('len images', len(images))
+    for itr, image in enumerate(images):   
+        cv2.imwrite('./images/Report {}/face_image_{}.jpg'.format(number_of_reports, itr),image)
+
+def receive_image_bytes(s):
+    full_msg = b''
+    new_msg = True    
+    while True:
+        msg = s.recv(102400)  #Receiving 100 KB
+        if len(msg) == 0:
+            return None 
+        if new_msg:
+            msglen = int(msg[:HEADERSIZE])
+            new_msg = False
+
+        full_msg += msg
+
+        if len(full_msg)-HEADERSIZE == msglen:
+            return pickle.loads(full_msg[HEADERSIZE:])
+
 def receiving_reports(s):
     print("thread started")
     while True:
@@ -27,14 +60,15 @@ def receiving_reports(s):
             report = receive(s)
         print("report received")
         number_of_reports = report[0]
+        number_of_reports +=1 #for naming purposes
         print(number_of_reports)
         report = report[1:]
-        current_report_path = './Reports/Report{}.csv'.format(number_of_reports+1)
+        current_report_path = './Reports/Report{}.csv'.format(number_of_reports)
         with open(current_report_path, mode='w', newline='') as file:
             file_write = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             for record in report:        
                 file_write.writerow(record)  
-
+        receive_images(s, number_of_reports)        
 
 def send(msg):
     msg = pickle.dumps(msg)
@@ -56,6 +90,8 @@ def receive(s):
 
         if len(full_msg)-HEADERSIZE == msglen:
             return pickle.loads(full_msg[HEADERSIZE:])
+
+
 
 
 class courses_window(QMainWindow):
@@ -117,18 +153,15 @@ class start_window(QMainWindow):
         self.count+=1
         
     def Download_and_Open_Dialog(self):
-        with open('./Reports/attendance_sheet.csv' , mode='w', newline='') as file:
+        with open('./Downloads/attendance_sheet_{}.csv'.format(date.today()) , mode='w', newline='') as file:
             file_write = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             for row in self.attendance_sheet:        
                 file_write.writerow(row)  
-        dialog=Dialog()
-        widget.addWidget(dialog)      
-
-        if self.count > 0:
-            widget.setCurrentIndex(widget.currentIndex()+self.count+1)
-        else:
-            widget.setCurrentIndex(widget.currentIndex()+1)
-            
+       
+        msg = QMessageBox()
+        msg.setWindowTitle("Downloaded")
+        msg.setText("Your Attendance Sheet is Downloaded!")
+        msg.exec_()
         
         
 class notif_window(QMainWindow):
@@ -137,7 +170,7 @@ class notif_window(QMainWindow):
         super(notif_window,self).__init__()
         uic.loadUi("notification.ui",self)
         self.buttonNumber=0
-        self.Hbox = QVBoxLayout()
+        self.Hbox = QHBoxLayout()
         self.vbox = QVBoxLayout(self.scrollAreaWidgetContents)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.scrollArea.setWidgetResizable(True)
@@ -167,32 +200,35 @@ class notif_window(QMainWindow):
         font.setWeight(75)
         self.view_btn.setFont(font)
         self.view_btn.setStyleSheet("background-color: rgb(47, 144, 145);\n""color: rgb(243, 243, 243);\n"" border-radius: 8px; \n" "padding:8px;" )
-        
-        self.vbox.insertWidget(self.Hbox.count() - 1, self.view_btn)
-        
+
+        self.vbox.insertWidget(self.Hbox.count() - 1, self.view_btn)  
         self.view_btn.pressed.connect(self.view_file)
         
+        self.sample_btn = QtWidgets.QPushButton("View Samples %d" % self.buttonNumber)
+        self.sample_btn.setObjectName("View Samples %d" % self.buttonNumber)
+        font = QtGui.QFont()
+        font.setPointSize(9)
+        font.setBold(True)
+        font.setWeight(75)
+        self.sample_btn.setFont(font)
+        self.sample_btn.setStyleSheet("background-color: rgb(47, 144, 145);\n""color: rgb(243, 243, 243);\n"" border-radius: 8px; \n" "padding:8px;" )
+
+        self.vbox.insertWidget(self.Hbox.count() - 1, self.sample_btn)  
+        self.sample_btn.pressed.connect(self.view_samples)
+      
     def view_file(self):
         sending_btn = self.sender()
         btn_name = str(sending_btn.objectName())
         btn_name=btn_name.split(sep=" ")[1]
         file_name = "./Reports/" + btn_name + ".csv"
         os.startfile(os.path.normpath(file_name))
-        
-class Dialog(QDialog):
-    def __init__(self):
-        super(Dialog,self).__init__()
-        loadUi("dialog.ui",self) 
-        self.ok_btn.pressed.connect(self.Goto_First_Window)
-        self.cancel_btn.pressed.connect(self.Close_App)
-        
-    def Goto_First_Window(self):
-        firstWindow = courses_window()
-        widget.addWidget(firstWindow)
-        widget.setCurrentIndex(widget.currentIndex()+1)
-        
-    def Close_App(self):
-        widget.removeWidget(self)
+     
+    def view_samples(self):
+        sending_btn = self.sender()
+        btn_name = str(sending_btn.objectName())
+        btn_name=btn_name.split(sep=" ")[2]        
+        file_name = "./images/Report {}".format(btn_name)
+        os.startfile(os.path.normpath(file_name))
 #main 
 if __name__ == '__main__': 
     global s

@@ -11,6 +11,7 @@ import SAA
 import threading
 import csv
 import multiprocessing
+import cv2
 
 def receive():
     full_msg = b''
@@ -42,12 +43,28 @@ def send_report(number_of_reports, clientsocket):
         for row in csv_reader:
             report.append(row)
     send(report, clientsocket)
+
+
+def send_images(initial_image, current_image, clientsocket):
+    print('Sending image')
+    images = []
+    print(initial_image, '-------' , current_image)
+    for i in range(initial_image, current_image):
+        path = './final_output/face_image_{}.jpg'.format(i)
+        img = cv2.imread(path, cv2.IMREAD_COLOR)
+        images.append(img)
+    print(len(images))
+    send(images, clientsocket)
+    print('Sent images')
+        
         
 def start_analysis(current_image, number_of_reports, clientsocket):
     while True:
+        initial_image = current_image
         current_image = SAA.run(current_image, number_of_reports[0])
         send_report(number_of_reports[0], clientsocket)
-        number_of_reports[0] +=1    
+        number_of_reports[0] +=1
+        send_images(initial_image, current_image, clientsocket)        
 
 def check_stop():
     while True:

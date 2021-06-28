@@ -260,9 +260,9 @@ def face_recog(detectedFacesLoc, img):
     
     return names
 
-def write_output(img, student_dict, mode):
+def write_output(img, students_dict, mode):
     temp_img = copy.deepcopy(img)
-    for student in student_dict:
+    for student in students_dict:
         if mode =='pose':
             text_to_display = Pose_name(student[mode]).name
         else:
@@ -461,6 +461,25 @@ def generate_attendance_sheet(number_of_reports):
             #attention = student.get_attention()
             #attendance = student.get_attendance()           
             file_write.writerow([s.id, s.name, str(float(s.attendance)/number_of_reports)])  
+
+def final_output(img, students_dict):
+    temp_img = copy.deepcopy(img)
+    for student in students_dict:
+        
+        pose_display = Pose_name(student['pose']).name
+        emotion_display = student['emotions']
+        name_display = student['name']        
+        
+        location = student['box']
+        
+        cv2.rectangle(temp_img, (location[0],location[1]), (location[2],location[3]), (255,0,0), 2)
+        
+        cv2.putText(temp_img, name_display, (location[0] + 50, location[1] - 55), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255,0,0), 1)
+        cv2.putText(temp_img, pose_display, (location[0] + 50, location[1] - 35), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255,0,0), 1)
+        cv2.putText(temp_img, emotion_display, (location[0] + 50, location[1] - 15), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255,0,0), 1)
+            
+    cv2.imwrite('./final_output/face_image_{}.jpg'.format(number_of_images),temp_img)
+    
     
 def analyze_image(path):
     print('-' * 40)
@@ -499,6 +518,7 @@ def analyze_image(path):
     
     write_output(img, students_dict, 'emotions')
 
+    final_output(img, students_dict)
     #print('-' * 40)
     fill_students(students_dict, students_list)
     
