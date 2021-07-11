@@ -161,6 +161,9 @@ class start_window(QMainWindow):
         msg = QMessageBox()
         msg.setWindowTitle("Downloaded")
         msg.setText("Your Attendance Sheet is Downloaded!")
+        #msg.setStyleSheet('QMessageBox {​​​​background-color: rgb(222, 234, 228);}​​​​\n QPushButton{​​​​background-color: rgb(47, 144, 145);color: rgb(243, 243, 243); border-radius: 10px; font-size: 16px; padding: 10px; text-align: center;}​​​​\n QLabel{​​​​min-width: 300px; min-height: 200px; color:rgb(33, 82, 115);}​​​​')
+        msg.setStyleSheet("QMessageBox {​​​​background-color: rgb(222, 234, 228);}​​​​\n​​​​")
+        
         msg.exec_()
         
         
