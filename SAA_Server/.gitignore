@@ -1,3 +1,7 @@
 training_attention
 detection_output
 temp
+augmented_dataset
+recognition_output
+pose_output
+emotions_output
