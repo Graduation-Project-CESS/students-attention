@@ -20,13 +20,17 @@ def start_data_augmentation():
             brightness_range = (0.5, 1.5))
     
     # Load all images from the directory
-    path_list = glob.glob("final_dataset/*.png")
-        
+    path_list = glob.glob("cropped images/*")
     # Loading image by image from the list
     iterator = 0
-    for path in tqdm(path_list):
-        img = load_img(path)
-        save_img('augmented_dataset/image_{}.png'.format(iterator), img)
+    for path in path_list:
+        img = load_img(path)        
+        name = path.split('\\')[1].split(' ')[0]
+      
+        if not os.path.exists('augmented_cropped_images/{}'.format(name)):
+            os.makedirs('augmented_cropped_images/{}'.format(name))
+    
+        save_img('augmented_cropped_images/{}/{} {}.png'.format(name, name, iterator), img)
         # Converting the input image to an array
         x = img_to_array(img)
         # Reshaping the input image
@@ -35,11 +39,13 @@ def start_data_augmentation():
         # Generating and saving 5 augmented samples 
         # using the above defined parameters. 
         i = 0
-        for batch in datagen.flow(x, batch_size = 1, save_to_dir ='augmented_dataset', save_prefix ='image', save_format ='png'):
+        
+        for batch in datagen.flow(x, batch_size = 1, save_to_dir ='augmented_cropped_images/{}'.format(name), save_prefix ='image', save_format ='png'):
             i += 1
             if i > 10:
                 break
         iterator += 1
+
     print('Finished Augmentation!')
 
 def rename_images():
@@ -56,13 +62,13 @@ def rename_images():
 
 def main():
     # Create directory to ssave the augmented images if not exists
-    if not os.path.exists('augmented_dataset'):
-        os.makedirs('augmented_dataset')
+    if not os.path.exists('augmented_cropped_images'):
+        os.makedirs('augmented_cropped_images')
     
     # The augmentation function may take a while to finish execution
     
-    # start_data_augmentation()
+    start_data_augmentation()
     
-    rename_images()
+    # rename_images()
 
 main()

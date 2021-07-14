@@ -15,14 +15,14 @@
   </property>
   <property name="styleSheet">
    <string notr="true">background-color: rgb(222, 234, 228);
-window-title:&quot;Select a Course&quot;;</string>
+wondow-title:&quot;Select a Course&quot;;</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLabel" name="course_label">
     <property name="geometry">
      <rect>
       <x>60</x>
-      <y>170</y>
+      <y>140</y>
       <width>381</width>
       <height>41</height>
      </rect>
@@ -43,56 +43,6 @@ font: 63 16pt &quot;Montserrat SemiBold&quot;;
     </property>
     <property name="text">
      <string>Select One of your Courses</string>
-    </property>
-   </widget>
-   <widget class="QDateTimeEdit" name="dateTimeEdit">
-    <property name="geometry">
-     <rect>
-      <x>280</x>
-      <y>80</y>
-      <width>201</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>10</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(243, 243, 243);
-color: rgb(33, 82, 115);
-selection-background-color: rgb(222, 234, 228);
-border-radius:10px;</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="date_label">
-    <property name="geometry">
-     <rect>
-      <x>310</x>
-      <y>40</y>
-      <width>141</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Montserrat Medium</family>
-      <pointsize>12</pointsize>
-      <weight>7</weight>
-      <italic>false</italic>
-      <bold>false</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">color: rgb(33, 82, 115);
-font: 57 12pt &quot;Montserrat Medium&quot;;</string>
-    </property>
-    <property name="text">
-     <string>Select a Date</string>
     </property>
    </widget>
    <widget class="QPushButton" name="start_btn">
@@ -123,7 +73,7 @@ font: 57 12pt &quot;Montserrat Medium&quot;;</string>
     <property name="geometry">
      <rect>
       <x>60</x>
-      <y>240</y>
+      <y>220</y>
       <width>251</width>
       <height>41</height>
      </rect>
@@ -142,6 +92,16 @@ selection-background-color: lightgray;</string>
     <item>
      <property name="text">
       <string>Choose</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Deep Learning</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Pattern Recognition</string>
      </property>
     </item>
     <item>
@@ -228,8 +188,6 @@ selection-background-color: lightgray;</string>
    </widget>
    <zorder>c2</zorder>
    <zorder>course_label</zorder>
-   <zorder>dateTimeEdit</zorder>
-   <zorder>date_label</zorder>
    <zorder>start_btn</zorder>
    <zorder>comboBox</zorder>
    <zorder>c3</zorder>

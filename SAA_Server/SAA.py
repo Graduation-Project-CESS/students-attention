@@ -202,7 +202,7 @@ def FindFaces(img):
         else:
             detectedFacesLoc.remove(f)
             
-    cv2.imwrite('./detection_output/face_image_{}.jpg'.format(number_of_images),temp_img)
+    cv2.imwrite('./detection_output/face_image_{}.jpg'.format(current_image),temp_img)
     return detectedFacesLoc
 
 
@@ -218,7 +218,7 @@ def face_recog(detectedFacesLoc, img):
         if len(encodings)==0:
             img_crop=img[Loc[1] - 20: Loc[3] + 20,Loc[0] - 10:Loc[2] + 10]
             encodings=face_recognition.face_encodings(img_crop)
-        cv2.imwrite("./cropped_faces/crop_img_{}_{}.jpg".format(number_of_images, i),img_crop) 
+        cv2.imwrite("./cropped_faces/crop_img_{}_{}.jpg".format(current_image, i),img_crop) 
         match_count=0
         name = "Unknown" 
         try:
@@ -256,7 +256,7 @@ def face_recog(detectedFacesLoc, img):
     for (loc, name) in zip(detectedFacesLoc , names):
         # draw the predicted face name on the image
         cv2.putText(temp_img, name, (loc[0],loc[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
-        cv2.imwrite("./recognition_output/rec_img_{}.jpg".format(number_of_images),temp_img)
+        cv2.imwrite("./recognition_output/rec_img_{}.jpg".format(current_image),temp_img)
     
     return names
 
@@ -271,7 +271,7 @@ def write_output(img, students_dict, mode):
         cv2.rectangle(temp_img, (location[0],location[1]), (location[2],location[3]), (255,0,0), 2)
         cv2.putText(temp_img, text_to_display, (location[0] + 10, location[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255,0,0), 2)
             
-    cv2.imwrite('./{}_output/face_image_{}.jpg'.format(mode, number_of_images),temp_img)
+    cv2.imwrite('./{}_output/face_image_{}.jpg'.format(mode, current_image),temp_img)
 
 def to_rectangles(detectedFacesLoc):
     face_rect=dlib.rectangles()
@@ -478,7 +478,7 @@ def final_output(img, students_dict):
         cv2.putText(temp_img, pose_display, (location[0] + 50, location[1] - 35), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255,0,0), 1)
         cv2.putText(temp_img, emotion_display, (location[0] + 50, location[1] - 15), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255,0,0), 1)
             
-    cv2.imwrite('./final_output/face_image_{}.jpg'.format(number_of_images),temp_img)
+    cv2.imwrite('./final_output/face_image_{}.jpg'.format(current_image),temp_img)
     
     
 def analyze_image(path):
@@ -523,10 +523,12 @@ def analyze_image(path):
     fill_students(students_dict, students_list)
     
 
-def run(current_image, number_of_reports):
+def run(cur_image, number_of_reports):
     global number_of_images 
+    global current_image
+    current_image = cur_image
     start_time = time.time()
-    path_list = glob.glob("final_dataset/*.png")
+    path_list = glob.glob("augmented_dataset/*.png")
     
     print("Starting the system.")
     minutes = 0
@@ -553,7 +555,8 @@ def run(current_image, number_of_reports):
 students_ids = {"zeid":"16p6066",
                 "soheil":"16p3007",
                 "mayar":"16p6030",
-                "rowan":"16p3023"
+                "rowan":"16p3023",
+                "zeina": "16p3032"
                 }
 students_list =[]
 

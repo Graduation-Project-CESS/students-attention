@@ -33,7 +33,7 @@ def receive_images(s, number_of_reports):
         images = receive_image_bytes(s)
     
     print('len images', len(images))
-    for itr, image in enumerate(images):   
+    for itr, image in enumerate(images):
         cv2.imwrite('./images/Report {}/face_image_{}.jpg'.format(number_of_reports, itr),image)
 
 def receive_image_bytes(s):

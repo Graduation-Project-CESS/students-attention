@@ -72,7 +72,7 @@ def FindFaces(img):
 
 #get paths of each file in folder named Images
 #Images here contains my data(folders of various persons)
-imagePaths = list(paths.list_images('./cropped images'))
+imagePaths = list(paths.list_images('./augmented_cropped_images'))
 knownEncodings = []
 knownNames = []
 # loop over the image paths

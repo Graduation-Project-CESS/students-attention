@@ -43,31 +43,6 @@ font: 63 16pt &quot;Montserrat SemiBold&quot;;</string>
      <string>Notifications</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="show_overall_btn">
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>320</y>
-      <width>221</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>10</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(47, 144, 145);
-color: rgb(243, 243, 243);
- border-radius: 15px;</string>
-    </property>
-    <property name="text">
-     <string>Show Overall Analysis</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="back_btn">
     <property name="geometry">
      <rect>
@@ -203,7 +178,6 @@ color: rgb(33, 82, 115);
    <zorder>c8</zorder>
    <zorder>scrollArea</zorder>
    <zorder>Notify_label</zorder>
-   <zorder>show_overall_btn</zorder>
    <zorder>back_btn</zorder>
    <zorder>c7</zorder>
    <zorder>label</zorder>
