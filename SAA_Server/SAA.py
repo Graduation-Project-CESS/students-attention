@@ -222,7 +222,7 @@ def face_recog(detectedFacesLoc, img):
         match_count=0
         name = "Unknown" 
         try:
-            matches = face_recognition.compare_faces(data['encodings'],encodings[0],tolerance=0.6)      
+            matches = face_recognition.compare_faces(data['encodings'],encodings[0],tolerance=0.5)      
     
             #set name =unknown if no encoding matches
             #matches=np.array(matches)
@@ -230,7 +230,7 @@ def face_recog(detectedFacesLoc, img):
                 if m :
                     match_count+=1
             # check to see if we have found a match
-            if match_count > 5 :
+            if match_count > 10 :
                 #Find positions at which we get True and store them
                 matchedIdxs = [i for (i, b) in enumerate(matches) if b]
                 counts = {}
